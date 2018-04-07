@@ -1,0 +1,21 @@
+{
+  "name": "screenzero",
+  "version": "1.0.0",
+  "description": "Remote Screen Sharing And Audio Chat App",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ScreenZero",
+    "ScreenShare",
+    "Audio",
+    "Call"
+  ],
+  "author": "Ian Grail (github.com/grailian)",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^1.8.4"
+  }
+}
