@@ -1,19 +1,41 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
+    <title>ScreenZero</title>
+    <link rel="stylesheet" href="./src/css/main.css" />
+</head>
+
+<body>
+
+    <h1>ScreenZero</h1>
+
+    <div id="myScreen">
+        <h3>Sharing My Screen</h3>
+        <video id="screen" autoplay playsinline></video>
+    </div>
+
+    <div id="videoCanvas">
+        <h3>Viewing Remote Screen</h3>
+        <video id="remote" autoplay playsinline></video>
+        <canvas id="photo"></canvas>
+    </div>
+
+    <button id="share">Share My Screen Nao</button>
+
+    <div id="buttons">
+        <input id="chatInput" type="text" />
+        <button id="chatSendBtn">Share</button>
+    </div>
+
+    <div id="chat"></div>
 
     <script>
       // You can also require other files to run in this process
-      require('./renderer.js')
+      require('./src/services/main.js');
+      require('./src/services/renderer.js');
     </script>
-  </body>
+</body>
+
 </html>
