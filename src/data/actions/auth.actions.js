@@ -2,6 +2,7 @@ import * as types from '../action-types';
 import User from '../../services/models/user.model';
 import { listenForChatMessages } from './chatMessages.actions';
 import { listenForFriends } from './friends.actions';
+import { listenForConversations } from './conversations.actions'
 
 function storeUser(data) {
   return {
@@ -20,7 +21,8 @@ export function initialize() {
 
         if (user) {
           dispatch(listenForFriends());
-          dispatch(listenForChatMessages());
+          // dispatch(listenForChatMessages());
+          dispatch(listenForConversations());
         }
       });
   };

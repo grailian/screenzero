@@ -5,23 +5,23 @@ import Button from '@material-ui/core/Button';
 import spacing from '@material-ui/core/styles/spacing';
 import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
-import { sendChatMessage } from '../data/actions/chatMessages.actions';
-import { chatMessagesSelector } from '../data/selectors/chatMessages.selector';
+import { sendChatMessage } from '../data/actions/conversations.actions';
+// import { chatMessagesSelector } from '../data/selectors/chatMessages.selector';
 import { friendsSelector } from '../data/selectors/friends.selector';
 import { userSelector } from '../data/selectors/user.selector';
+import { conversationsSelector } from '../data/selectors/conversations.selector'
+import Messages from '../services/models/messages.model'
 
 class Friends extends React.Component {
   static propTypes = {
     user: PropTypes.object,
-    friends: PropTypes.array,
-    chatMessages: PropTypes.array,
-    sendChatMessage: PropTypes.func,
+    friends: PropTypes.array
   };
 
   static defaultProps = {
     user: null,
     friends: [],
-    chatMessages: [],
+    conversations: [],
   };
 
   state = {
@@ -33,13 +33,25 @@ class Friends extends React.Component {
 
   onSubmit = (event) => {
     event.preventDefault();
-    this.props.sendChatMessage({
-      from: this.props.user.uid,
-      message: this.state.message,
-      conversationID: 'ian-and-aaron',
+    this.props.sendChatMessage(this.props.conversations[0].id, {
+      senderID: this.props.user.uid,
+      content: this.state.message,
+      type: Messages.TYPES.CHAT,
+      sentDate: new Date()
     });
     this.setState({ message: '' });
   };
+
+/*  onSubmit = (event) => {
+    event.preventDefault();
+    this.props.sendChatMessage(this.props.conversations[0].id, {
+      senderID: this.props.user.uid,
+      content: this.state.message,
+      type: Messages.TYPES.CHAT,
+      sentDate: new Date()
+    });
+    this.setState({ message: '' });
+  };*/
 
   onChange = (field) => {
     return (event) => {
@@ -61,13 +73,17 @@ class Friends extends React.Component {
   };
 
   renderChatMessages = () => {
-    return this.props.chatMessages.map((item) => {
-      return (
-        <div key={item.id}>
-          {item.id}
-        </div>
-      );
-    });
+    console.log('render', this.props)
+    if(this.props.conversations.length){
+      return this.props.conversations[0].messages.map((item) => {
+        return (
+          <div key={item.id}>
+            {item.content}
+          </div>
+        );
+      });
+    }
+    return null
   };
 
   render() {
@@ -132,7 +148,7 @@ const mapStateToProps = (state) => {
   return {
     user: userSelector(state),
     friends: friendsSelector(state),
-    chatMessages: chatMessagesSelector(state),
+    conversations: conversationsSelector(state)
   };
 };
 

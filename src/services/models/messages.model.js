@@ -2,7 +2,7 @@ import Listener from '../../helpers/Listener';
 import firebase from '../firebase.service';
 import FirestoreSanitizer from './FirestoreSanitizer';
 
-class ChatMessagesModel {
+class MessagesModel {
   constructor() {
     this.sanitize = new FirestoreSanitizer(this.COLLECTION_PROPS);
   }
@@ -12,7 +12,7 @@ class ChatMessagesModel {
    *
    * @type {string}
    */
-  COLLECTION_NAME = 'chatMessages';
+  COLLECTION_NAME = 'messages';
 
 
   /**
@@ -21,15 +21,19 @@ class ChatMessagesModel {
    * @type {string[]}
    */
   COLLECTION_PROPS = [
-    'message',
-    'from',
-    'conversationID',
+    'content',
+    'type',
+    'senderID',
+    'sentDate'
   ];
 
-  collectionRef = firebase.firestore().collection(this.COLLECTION_NAME);
+  TYPES = {
+    CHAT: 'CHAT',
+    P2P: 'P2P'
+  };
 
   subscriptions = {
-    chatMessages: () => null,
+    messages: () => null,
   };
 
   /**
@@ -37,16 +41,18 @@ class ChatMessagesModel {
    *
    * @returns {Listener}
    */
-  listenForChatMessages() {
+  listenForMessages(conversationRef) {
     return new Listener((onUpdate, onError) => {
 
       // Cancel any existing firestore watchers
-      this.subscriptions.chatMessages();
-      this.subscriptions.chatMessages = this.collectionRef.onSnapshot((snapshot) => {
-        const chatMessages = this.sanitize.collectionSnapshot(snapshot);
-        console.log(chatMessages)
-        onUpdate(chatMessages);
-      }, onError);
+      this.subscriptions.messages();
+      this.subscriptions.messages = conversationRef
+        .collection(this.COLLECTION_NAME)
+        .onSnapshot((snapshot) => {
+          const messages = this.sanitize.collectionSnapshot(snapshot);
+          console.log(messages)
+          onUpdate(messages);
+        }, onError);
     });
   }
 
@@ -55,11 +61,13 @@ class ChatMessagesModel {
    *
    * @returns {Promise}
    */
-  sendChatMessage(data) {
-    return this.collectionRef
+  sendMessage(conversationRef, data) {
+    console.log('convo ref', conversationRef)
+    return conversationRef
+      .collection(this.COLLECTION_NAME)
       .doc()
       .set(this.sanitize.data(data));
   }
 }
 
-export default new ChatMessagesModel();
+export default new MessagesModel();
