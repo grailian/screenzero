@@ -29,11 +29,14 @@ class MessagesModel {
 
   TYPES = {
     CHAT: 'CHAT',
-    P2P: 'P2P'
+    P2P_INIT: 'P2P_INIT',
+    P2P_CONNECT: 'P2P_CONNECT'
   };
 
   subscriptions = {
     messages: () => null,
+    p2pInit: () => null,
+    p2pConnect: () => null,
   };
 
   /**
@@ -48,6 +51,53 @@ class MessagesModel {
       this.subscriptions.messages();
       this.subscriptions.messages = conversationRef
         .collection(this.COLLECTION_NAME)
+        .orderBy('sentDate', 'asc')
+        .onSnapshot((snapshot) => {
+          const messages = this.sanitize.collectionSnapshot(snapshot);
+          onUpdate(messages);
+        }, onError);
+    });
+  }
+
+  /**
+   * Subscribe to the user's list of chatMessages
+   *
+   * @returns {Listener}
+   */
+  listenForP2PInit(conversationID) {
+    console.log('listenp2pinit')
+    return new Listener((onUpdate, onError) => {
+      const collectionRef = firebase.firestore()
+        .collection('conversations')
+        .doc(conversationID)
+        .collection(this.COLLECTION_NAME)
+
+      this.subscriptions.p2pInit();
+      this.subscriptions.p2pInit = collectionRef
+        .where('type', '==', this.TYPES.P2P_INIT)
+        .orderBy('sentDate', 'asc')
+        .limit(1)
+        .onSnapshot((snapshot) => {
+          const messages = this.sanitize.collectionSnapshot(snapshot);
+          console.log(messages)
+          onUpdate(messages);
+        }, onError);
+    });
+  }
+
+  listenForP2PConnect(conversationID) {
+    console.log('listenp2pconnect')
+    return new Listener((onUpdate, onError) => {
+      const collectionRef = firebase.firestore()
+        .collection('conversations')
+        .doc(conversationID)
+        .collection(this.COLLECTION_NAME)
+
+      this.subscriptions.p2pConnect();
+      this.subscriptions.p2pConnect = collectionRef
+        .where('type', '==', this.TYPES.P2P_CONNECT)
+        .orderBy('sentDate', 'asc')
+        .limit(1)
         .onSnapshot((snapshot) => {
           const messages = this.sanitize.collectionSnapshot(snapshot);
           console.log(messages)
@@ -62,7 +112,6 @@ class MessagesModel {
    * @returns {Promise}
    */
   sendMessage(conversationRef, data) {
-    console.log('convo ref', conversationRef)
     return conversationRef
       .collection(this.COLLECTION_NAME)
       .doc()

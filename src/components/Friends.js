@@ -11,6 +11,10 @@ import { friendsSelector } from '../data/selectors/friends.selector';
 import { userSelector } from '../data/selectors/user.selector';
 import { conversationsSelector } from '../data/selectors/conversations.selector'
 import Messages from '../services/models/messages.model'
+import IconButton from '@material-ui/core/IconButton';
+import PhoneIcon from '@material-ui/icons/Phone';
+import ScreenShare from '@material-ui/icons/ScreenShare';
+import P2P from '../services/p2p'
 
 class Friends extends React.Component {
   static propTypes = {
@@ -42,16 +46,18 @@ class Friends extends React.Component {
     this.setState({ message: '' });
   };
 
-/*  onSubmit = (event) => {
-    event.preventDefault();
-    this.props.sendChatMessage(this.props.conversations[0].id, {
-      senderID: this.props.user.uid,
-      content: this.state.message,
-      type: Messages.TYPES.CHAT,
-      sentDate: new Date()
-    });
-    this.setState({ message: '' });
-  };*/
+  onConnect = (useVideo) => {
+    console.log('onConnectClicked')
+    P2P.setOnSignal(signal => {
+      this.props.sendChatMessage(this.props.conversations[0].id, {
+        senderID: this.props.user.uid,
+        content: JSON.stringify(signal),
+        type: Messages.TYPES.P2P_INIT,
+        sentDate: new Date()
+      });
+    })
+    P2P.connectToFriend(useVideo)
+  };
 
   onChange = (field) => {
     return (event) => {
@@ -73,9 +79,11 @@ class Friends extends React.Component {
   };
 
   renderChatMessages = () => {
-    console.log('render', this.props)
     if(this.props.conversations.length){
       return this.props.conversations[0].messages.map((item) => {
+        if(item.type === Messages.TYPES.P2P_INIT || item.type === Messages.TYPES.P2P_CONNECT){
+          return null
+        }
         return (
           <div key={item.id}>
             {item.content}
@@ -105,7 +113,7 @@ class Friends extends React.Component {
             type="email"
             // margin="normal"
             value={this.state.message}
-            fullWidth
+            style={{ flexGrow: 1 }}
             onChange={this.onChange('message')}
           />
           <div style={styles.wrapper}>
@@ -117,6 +125,18 @@ class Friends extends React.Component {
             >
               Send
             </Button>
+
+            <IconButton
+              onClick={this.onConnect.bind(this, false)}
+              disabled={this.props.loading}>
+              <PhoneIcon />
+            </IconButton>
+
+            <IconButton
+              onClick={this.onConnect.bind(this, true)}
+              disabled={this.props.loading}>
+              <ScreenShare />
+            </IconButton>
           </div>
         </form>
       </div>

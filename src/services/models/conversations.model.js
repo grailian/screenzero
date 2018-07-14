@@ -2,6 +2,7 @@ import Listener from '../../helpers/Listener';
 import firebase from '../firebase.service';
 import FirestoreSanitizer from './FirestoreSanitizer';
 import Messages from './messages.model';
+import P2P from '../p2p'
 
 class ConversationsModel {
   constructor() {
