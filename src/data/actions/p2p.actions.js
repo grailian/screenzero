@@ -1,7 +1,5 @@
 import * as types from '../action-types';
-import Conversations from '../../services/models/conversations.model';
 import Messages from '../../services/models/messages.model';
-import { conversationsSelector, currentConversationSelector } from '../selectors/conversations.selector';
 import { remoteStreamSelector } from '../selectors/p2p.selector';
 import { userSelector } from '../selectors/user.selector';
 import P2P from '../../services/p2p';
@@ -59,6 +57,8 @@ export function connectToFriend(conversationID, useVideo) {
   };
 }
 
+let sentConnect = false;
+
 /**
  * Creates a new peer connection with initiator=false
  * Handles a P2P_INIT signal message
@@ -90,7 +90,10 @@ export function handleP2PInitMessage(conversationID, message) {
 
           const send = debouce(() => {
             console.log('sending...');
-            // dispatch(sendChatMessage(conversationID, message));
+            if (!sentConnect) {
+              sentConnect = true;
+              dispatch(sendChatMessage(conversationID, message));
+            }
           }, 2000);
           send();
         } else {

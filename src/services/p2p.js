@@ -7,20 +7,20 @@ class P2P {
     this.myStream = null;
   }
 
-  async addTrack(useVideo) {
-    const newStream = await this.getStream(useVideo);
+  async addTrack(sendScreen) {
+    const newStream = await this.getStream(sendScreen);
     console.log('newStream.getTracks()', newStream.getTracks());
     const track = newStream.getTracks()[0];
     return this.localPeer.addTrack(track, this.myStream);
   }
 
-  getStream(useVideo) {
-    if (useVideo) {
+  getStream(sendScreen) {
+    if (sendScreen) {
       return shareScreen();
     }
     return navigator.mediaDevices.getUserMedia({
       audio: true,
-      video: useVideo,
+      video: false,
     });
   }
 
@@ -48,19 +48,20 @@ class P2P {
       throw new Error('You must pass in a signal in order to join a connection!');
     }
 
+    if (this.localPeer) {
+      // Signal the peer
+      console.log('final signal');
+      this.localPeer.signal(signal);
+      return this.localPeer;
+    }
+
     try {
       this.myStream = await this.getStream();
 
       console.log('this.myStream.id', this.myStream.id);
 
-      if (!this.localPeer) {
-        // Join a peer connection
-        this.localPeer = this.newPeer(false, this.myStream);
-      } else {
-        // Signal the peer
-        this.localPeer = this.newPeer(false, this.myStream);
-        console.log('final signal');
-      }
+      // Join a peer connection
+      this.localPeer = this.newPeer(false, this.myStream);
       this.localPeer.signal(signal);
       console.log('signal', signal);
       return this.localPeer;
@@ -96,6 +97,7 @@ class P2P {
   }
 
   onTrack(track, stream) {
+    console.log('onTrack track', track);
     if (typeof this._onTrack === 'function') {
       this._onTrack(track, stream);
     }
