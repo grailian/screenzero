@@ -24,13 +24,13 @@ class MessagesModel {
     'content',
     'type',
     'senderID',
-    'sentDate'
+    'sentDate',
   ];
 
   TYPES = {
     CHAT: 'CHAT',
     P2P_INIT: 'P2P_INIT',
-    P2P_CONNECT: 'P2P_CONNECT'
+    P2P_CONNECT: 'P2P_CONNECT',
   };
 
   subscriptions = {
@@ -60,48 +60,59 @@ class MessagesModel {
   }
 
   /**
-   * Subscribe to the user's list of chatMessages
+   * Subscribe to a partner's P2P init messages
    *
+   * @param conversationID
+   * @param userID
    * @returns {Listener}
    */
-  listenForP2PInit(conversationID) {
-    console.log('listenp2pinit')
+  listenForP2PInit(conversationID, userID) {
     return new Listener((onUpdate, onError) => {
-      const collectionRef = firebase.firestore()
+      const conversationRef = firebase.firestore()
         .collection('conversations')
-        .doc(conversationID)
-        .collection(this.COLLECTION_NAME)
+        .doc(conversationID);
 
       this.subscriptions.p2pInit();
-      this.subscriptions.p2pInit = collectionRef
+      this.subscriptions.p2pInit = conversationRef
+        .collection(this.COLLECTION_NAME)
+        .where('senderID', '==', userID)
         .where('type', '==', this.TYPES.P2P_INIT)
-        .orderBy('sentDate', 'asc')
+        .orderBy('sentDate', 'desc')
         .limit(1)
         .onSnapshot((snapshot) => {
           const messages = this.sanitize.collectionSnapshot(snapshot);
-          console.log(messages)
-          onUpdate(messages);
+          if (messages.length > 0) {
+            onUpdate(messages[0]);
+          }
         }, onError);
     });
   }
 
-  listenForP2PConnect(conversationID) {
-    console.log('listenp2pconnect')
+  /**
+   * Subscribe to a partner's P2P connect messages
+   *
+   * @param conversationID
+   * @param userID
+   * @returns {Listener}
+   */
+  listenForP2PConnect(conversationID, userID) {
     return new Listener((onUpdate, onError) => {
-      const collectionRef = firebase.firestore()
+      const conversationRef = firebase.firestore()
         .collection('conversations')
-        .doc(conversationID)
-        .collection(this.COLLECTION_NAME)
+        .doc(conversationID);
 
       this.subscriptions.p2pConnect();
-      this.subscriptions.p2pConnect = collectionRef
+      this.subscriptions.p2pConnect = conversationRef
+        .collection(this.COLLECTION_NAME)
+        .where('senderID', '==', userID)
         .where('type', '==', this.TYPES.P2P_CONNECT)
-        .orderBy('sentDate', 'asc')
+        .orderBy('sentDate', 'desc')
         .limit(1)
         .onSnapshot((snapshot) => {
           const messages = this.sanitize.collectionSnapshot(snapshot);
-          console.log(messages)
-          onUpdate(messages);
+          if (messages.length > 0) {
+            onUpdate(messages[0]);
+          }
         }, onError);
     });
   }
@@ -116,6 +127,26 @@ class MessagesModel {
       .collection(this.COLLECTION_NAME)
       .doc()
       .set(this.sanitize.data(data));
+  }
+
+  /**
+   * Deletes All Messages
+   *
+   * @returns {Promise}
+   */
+  async deleteAllMessages(conversationID) {
+    return firebase.firestore()
+      .collection('conversations')
+      .doc(conversationID)
+      .collection(this.COLLECTION_NAME)
+      .get()
+      .then((snapshot) => {
+        const batch = firebase.firestore().batch();
+        snapshot.docs.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        return batch.commit();
+      });
   }
 }
 

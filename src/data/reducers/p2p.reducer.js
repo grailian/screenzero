@@ -5,29 +5,18 @@ const initialStateLoading = false;
 
 function loading(state = initialStateLoading, action) {
   switch (action.type) {
-    case types.LOADING_CONVERSATIONS:
+    case types.LOADING_REMOTE_STREAM:
       return action.data;
     default:
       return state;
   }
 }
 
-const initialStateData = [];
+const initialStateData = null;
 
 function data(state = initialStateData, action) {
   switch (action.type) {
-    case types.SET_CONVERSATIONS:
-      return action.data;
-    default:
-      return state;
-  }
-}
-
-const initialStateSelected = [];
-
-function selected(state = initialStateSelected, action) {
-  switch (action.type) {
-    case types.SET_CURRENT_CONVERSATION:
+    case types.SET_REMOTE_STREAM:
       return action.data;
     default:
       return state;
@@ -37,5 +26,4 @@ function selected(state = initialStateSelected, action) {
 export default combineReducers({
   loading,
   data,
-  selected,
 });

@@ -2,7 +2,6 @@ import Listener from '../../helpers/Listener';
 import firebase from '../firebase.service';
 import FirestoreSanitizer from './FirestoreSanitizer';
 import Messages from './messages.model';
-import P2P from '../p2p'
 
 class ConversationsModel {
   constructor() {
@@ -24,7 +23,7 @@ class ConversationsModel {
    */
   COLLECTION_PROPS = [
     'members',
-    'presenterID'
+    'presenterID',
   ];
 
   collectionRef = firebase.firestore().collection(this.COLLECTION_NAME);
@@ -47,22 +46,21 @@ class ConversationsModel {
         .where(`members.${userID}`, '==', true)
         .onSnapshot((snapshot) => {
           const conversations = this.sanitize.collectionSnapshot(snapshot);
-          console.log(conversations)
           conversations.forEach(conversation => {
             Messages.listenForMessages(this.collectionRef.doc(conversation.id))
               .listen(messages => {
                 const convos = conversations.map(c => {
-                  if(c.id === conversation.id){
+                  if (c.id === conversation.id) {
                     return {
                       ...conversation,
-                      messages
-                    }
+                      messages,
+                    };
                   }
-                  return c
-                })
+                  return c;
+                });
                 onUpdate(convos);
-              })
-          })
+              });
+          });
 
         }, onError);
     });
@@ -74,8 +72,8 @@ class ConversationsModel {
    * @returns {Promise}
    */
   sendMessageToConversation(conversationID, data) {
-    const conversationRef = this.collectionRef.doc(conversationID)
-    return Messages.sendMessage(conversationRef, data)
+    const conversationRef = this.collectionRef.doc(conversationID);
+    return Messages.sendMessage(conversationRef, data);
   }
 
 

@@ -1,59 +1,63 @@
 import * as types from '../action-types';
 import Conversations from '../../services/models/conversations.model';
 import Messages from '../../services/models/messages.model';
-import { userSelector } from '../selectors/user.selector'
-import P2P from '../../services/p2p'
+import { conversationsSelector } from '../selectors/conversations.selector';
+import { userSelector } from '../selectors/user.selector';
+import { handleP2PConnectMessage, handleP2PInitMessage } from './p2p.actions';
 
 function storeConversations(data) {
   return {
     type: types.SET_CONVERSATIONS,
-    data
+    data,
   };
 }
 
 export function listenForConversations() {
-  const conversationID = 'mTpoKpbbbS4fXuUep3yp'
-
   return (dispatch, getState) => {
     dispatch({ type: types.LOADING_CONVERSATIONS, data: true });
-    const user = userSelector(getState())
+
+    const user = userSelector(getState());
+
     Conversations.listenForConversations(user.uid)
       .listen((conversations) => {
-      console.log('convo actions', conversations)
         dispatch(storeConversations(conversations));
         dispatch({ type: types.LOADING_CONVERSATIONS, data: false });
+
+        // TODO: Remove this eventually
+        dispatch(selectConversation('mTpoKpbbbS4fXuUep3yp'));
       })
       .catch((error) => {
         console.warn('listenForConversations error', error);
         dispatch({ type: types.LOADING_CONVERSATIONS, data: false });
       });
+  };
+}
 
-    Messages.listenForP2PInit(conversationID)
-      .listen((messages) => {
-        console.log('p2pInitMessage', messages)
-        if(messages[0] && messages[0].senderID !== user.uid){
-          P2P.setOnSignal(signal => {
-            Conversations.sendMessageToConversation(conversationID, {
-              senderID: user.uid,
-              content: JSON.stringify(signal),
-              type: Messages.TYPES.P2P_CONNECT,
-              sentDate: new Date()
-            });
-          })
-          P2P.connectToFriend(false, messages[0].content)
-        }
+
+function getOtherMember(members, myID) {
+  return Object.keys(members).find(id => id !== myID);
+}
+
+export function selectConversation(conversationID) {
+  return (dispatch, getState) => {
+    const conversations = conversationsSelector(getState());
+    const currentConvo = conversations.find(c => c.id === conversationID);
+    dispatch({ type: types.SET_CURRENT_CONVERSATION, data: currentConvo });
+
+    const user = userSelector(getState());
+    const otherMemberID = getOtherMember(currentConvo.members, user.uid);
+
+    Messages.listenForP2PInit(conversationID, otherMemberID)
+      .listen((message) => {
+        dispatch(handleP2PInitMessage(conversationID, message));
       })
       .catch((error) => {
         console.warn('listenForP2PInit error', error);
       });
 
-    Messages.listenForP2PConnect(conversationID)
-      .listen((messages) => {
-        console.log('p2pConnectMessage', messages)
-        if(messages[0] && messages[0].senderID !== user.uid){
-          P2P.setOnSignal(null)
-          P2P.connectToFriend(false, messages[0].content)
-        }
+    Messages.listenForP2PConnect(conversationID, otherMemberID)
+      .listen((message) => {
+        dispatch(handleP2PConnectMessage(conversationID, message));
       })
       .catch((error) => {
         console.warn('listenForP2PInit error', error);

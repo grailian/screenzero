@@ -4,6 +4,9 @@ import { connect } from 'react-redux';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
+import IconButton from '@material-ui/core/IconButton';
+import AccountCircle from '@material-ui/icons/AccountCircle';
+import User from '../services/models/user.model';
 import { userLoadingSelector, userSelector } from '../data/selectors/user.selector';
 import Loading from './Loading';
 import Login from './Login';
@@ -32,14 +35,20 @@ class Router extends React.Component {
 
   render() {
     return (
-      <AppBar position="static" color="default">
-        <Toolbar>
-          <Typography variant="title" color="inherit">
-            ScreenZero
-          </Typography>
-        </Toolbar>
+      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <AppBar position="static" color="default">
+          <Toolbar>
+            <Typography variant="title" color="inherit" style={{ flexGrow: 1 }}>
+              ScreenZero
+            </Typography>
+            {this.props.user && this.props.user.email}
+            <IconButton onClick={User.logout}>
+              <AccountCircle />
+            </IconButton>
+          </Toolbar>
+        </AppBar>
         {this.renderContent()}
-      </AppBar>
+      </div>
     );
   }
 }

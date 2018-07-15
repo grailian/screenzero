@@ -5,7 +5,7 @@ import 'firebase/firestore';
 const configsByProjectID = {
   'screen-zero-dev': {
     apiKey: 'AIzaSyDqx6NsnuIwqE-hmJsz2sO7n3Xme6_77aU',
-    authDomain: 'screen-zero-dev.firebaseapp.com',
+    // authDomain: 'screen-zero-dev.firebaseapp.com',
     databaseURL: 'https://screen-zero-dev.firebaseio.com',
     projectId: 'screen-zero-dev',
     storageBucket: 'screen-zero-dev.appspot.com',

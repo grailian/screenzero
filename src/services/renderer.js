@@ -1,7 +1,5 @@
 const { desktopCapturer } = window.require('electron');
 
-console.log('desktopCapturer', desktopCapturer);
-
 function shareScreen() {
   return new Promise((resolve, reject) => {
     const sourceConfig = { types: ['window', 'screen'] };
@@ -11,7 +9,11 @@ function shareScreen() {
       for (let i = 0; i < sources.length; ++i) {
         if (sources[i].name === 'Entire screen') {
           navigator.mediaDevices.getUserMedia({
-            audio: false,
+            // audio: {
+            //   mandatory: {
+            //     chromeMediaSource: 'desktop'
+            //   }
+            // },
             video: {
               mandatory: {
                 chromeMediaSource: 'desktop',
@@ -30,20 +32,6 @@ function shareScreen() {
       }
     });
   });
-}
-
-function receiveStream(stream) {
-  const video = document.querySelector('#screen');
-  console.log('video', video);
-  video.srcObject = stream;
-  video.onloadedmetadata = (e) => video.play();
-}
-
-function handleStream(stream) {
-}
-
-function handleError(e) {
-  console.log(e);
 }
 
 module.exports.shareScreen = shareScreen;

@@ -5,21 +5,22 @@ import Button from '@material-ui/core/Button';
 import spacing from '@material-ui/core/styles/spacing';
 import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
-import { sendChatMessage } from '../data/actions/conversations.actions';
-// import { chatMessagesSelector } from '../data/selectors/chatMessages.selector';
-import { friendsSelector } from '../data/selectors/friends.selector';
-import { userSelector } from '../data/selectors/user.selector';
-import { conversationsSelector } from '../data/selectors/conversations.selector'
-import Messages from '../services/models/messages.model'
 import IconButton from '@material-ui/core/IconButton';
 import PhoneIcon from '@material-ui/icons/Phone';
+import DeleteIcon from '@material-ui/icons/Delete';
 import ScreenShare from '@material-ui/icons/ScreenShare';
-import P2P from '../services/p2p'
+import { sendChatMessage } from '../data/actions/conversations.actions';
+import { connectToFriend } from '../data/actions/p2p.actions';
+import { friendsSelector } from '../data/selectors/friends.selector';
+import { remoteStreamSelector } from '../data/selectors/p2p.selector';
+import { userSelector } from '../data/selectors/user.selector';
+import { conversationsSelector, currentConversationSelector } from '../data/selectors/conversations.selector';
+import Messages from '../services/models/messages.model';
 
 class Friends extends React.Component {
   static propTypes = {
     user: PropTypes.object,
-    friends: PropTypes.array
+    friends: PropTypes.array,
   };
 
   static defaultProps = {
@@ -37,26 +38,17 @@ class Friends extends React.Component {
 
   onSubmit = (event) => {
     event.preventDefault();
-    this.props.sendChatMessage(this.props.conversations[0].id, {
+    this.props.sendChatMessage(this.props.conversation.id, {
       senderID: this.props.user.uid,
       content: this.state.message,
       type: Messages.TYPES.CHAT,
-      sentDate: new Date()
+      sentDate: new Date(),
     });
     this.setState({ message: '' });
   };
 
   onConnect = (useVideo) => {
-    console.log('onConnectClicked')
-    P2P.setOnSignal(signal => {
-      this.props.sendChatMessage(this.props.conversations[0].id, {
-        senderID: this.props.user.uid,
-        content: JSON.stringify(signal),
-        type: Messages.TYPES.P2P_INIT,
-        sentDate: new Date()
-      });
-    })
-    P2P.connectToFriend(useVideo)
+    this.props.connectToFriend(this.props.conversation.id, useVideo);
   };
 
   onChange = (field) => {
@@ -67,6 +59,9 @@ class Friends extends React.Component {
     };
   };
 
+  delete = () => {
+    Messages.deleteAllMessages(this.props.conversation.id);
+  };
 
   renderFriends = () => {
     return this.props.friends.map((item) => {
@@ -79,10 +74,15 @@ class Friends extends React.Component {
   };
 
   renderChatMessages = () => {
-    if(this.props.conversations.length){
-      return this.props.conversations[0].messages.map((item) => {
-        if(item.type === Messages.TYPES.P2P_INIT || item.type === Messages.TYPES.P2P_CONNECT){
-          return null
+    if (this.props.conversation && this.props.conversation.messages) {
+      return this.props.conversation.messages.map((item) => {
+        if (item.type === Messages.TYPES.P2P_INIT || item.type === Messages.TYPES.P2P_CONNECT) {
+          // return item.content;
+          return (
+            <div key={item.id}>
+              {item.type}
+            </div>
+          );
         }
         return (
           <div key={item.id}>
@@ -91,7 +91,24 @@ class Friends extends React.Component {
         );
       });
     }
-    return null
+    return null;
+  };
+
+  renderVideo = () => {
+    return (
+      <video
+        style={{ height: '250px', overflow: 'hidden' }}
+        autoPlay
+        playsInline
+        ref={(video) => {
+          if (video && this.props.remoteStream) {
+            console.log('video', video);
+            console.log('this.props.remoteStream.getTracks()', this.props.remoteStream.getTracks());
+            video.srcObject = this.props.remoteStream;
+          }
+        }}
+      />
+    );
   };
 
   render() {
@@ -103,10 +120,23 @@ class Friends extends React.Component {
             {this.renderFriends()}
           </div>
           <div style={{ flexGrow: 1 }}>
-            <h4>Chat</h4>
-            {this.renderChatMessages()}
+            <h4>
+              Chat
+              <IconButton
+                onClick={this.delete}
+                disabled={this.props.loading}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </h4>
+            <div style={{ overflow: 'hidden' }}>
+              {this.renderChatMessages()}
+            </div>
           </div>
         </Paper>
+        <div style={{ height: '250px', overflow: 'hidden' }}>
+          {this.renderVideo()}
+        </div>
         <form style={styles.inputContainer} noValidate onSubmit={this.onSubmit}>
           <TextField
             label="Message"
@@ -168,10 +198,12 @@ const mapStateToProps = (state) => {
   return {
     user: userSelector(state),
     friends: friendsSelector(state),
-    conversations: conversationsSelector(state)
+    conversations: conversationsSelector(state),
+    remoteStream: remoteStreamSelector(state),
+    conversation: currentConversationSelector(state),
   };
 };
 
-const mapDispatchToProps = { sendChatMessage };
+const mapDispatchToProps = { sendChatMessage, connectToFriend };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Friends);

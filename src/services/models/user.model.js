@@ -70,10 +70,7 @@ class UserModel {
    * @return {Promise<firebase.User>} User Object for the logged in user.
    */
   async login(email, password) {
-    // TODO: catch errors and handle them appropriately
-    console.log('email, password', email, password);
-    const authResult = await firebase.auth().signInAndRetrieveDataWithEmailAndPassword(email, password);
-    console.log('authResult', authResult);
+    const authResult = await firebase.auth().signInWithEmailAndPassword(email, password);
     return this.sanitize.data(authResult.user.toJSON());
   }
 
@@ -152,7 +149,7 @@ class UserModel {
    *
    * @return {Promise} Firebase User object
    */
-  static async logout() {
+  async logout() {
     return firebase.auth().signOut();
   }
 
@@ -162,7 +159,7 @@ class UserModel {
    *
    * @return {Promise<string>} Success Message or Error
    */
-  static async deleteAccount() {
+  async deleteAccount() {
     const user = firebase.auth().currentUser;
     await user.delete();
     return 'User has been deleted successfully!';

@@ -21,7 +21,7 @@ export function initialize() {
 
         if (user) {
           dispatch(listenForFriends());
-          // dispatch(listenForChatMessages());
+          dispatch(listenForChatMessages());
           dispatch(listenForConversations());
         }
       });
@@ -31,13 +31,12 @@ export function initialize() {
 export function login(email, password) {
   return async (dispatch, getState) => {
     try {
-      console.log('email, password', email, password);
       dispatch({ type: types.LOADING_USER, data: true });
       const user = await User.login(email, password);
-      console.log('user', user);
       dispatch({ type: types.LOADING_USER, data: false });
+      return user;
     } catch (error) {
-      console.log('error', error);
+      console.warn('login error', error);
       dispatch({ type: types.LOADING_USER, data: false });
     }
   };

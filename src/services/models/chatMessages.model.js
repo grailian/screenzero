@@ -44,7 +44,6 @@ class ChatMessagesModel {
       this.subscriptions.chatMessages();
       this.subscriptions.chatMessages = this.collectionRef.onSnapshot((snapshot) => {
         const chatMessages = this.sanitize.collectionSnapshot(snapshot);
-        console.log(chatMessages)
         onUpdate(chatMessages);
       }, onError);
     });

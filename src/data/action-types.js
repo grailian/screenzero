@@ -21,3 +21,10 @@ export const SET_CHAT_MESSAGES = 'SET_CHAT_MESSAGES';
 // ------------------------------------
 export const LOADING_CONVERSATIONS = 'LOADING_CONVERSATIONS';
 export const SET_CONVERSATIONS = 'SET_CONVERSATIONS';
+export const SET_CURRENT_CONVERSATION = 'SET_CURRENT_CONVERSATION';
+
+// ------------------------------------
+// P2P Actions
+// ------------------------------------
+export const LOADING_REMOTE_STREAM = 'LOADING_REMOTE_STREAM';
+export const SET_REMOTE_STREAM = 'SET_REMOTE_STREAM';
