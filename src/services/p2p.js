@@ -1,6 +1,22 @@
 import Peer from 'simple-peer';
 import { shareScreen } from './renderer';
 
+/**
+ * Converts an array buffer to a string
+ *
+ * @param uint8arr {Uint8Array} - The buffer to convert
+ * @param callback {Function} - The function to call when conversion is complete
+ */
+function largeuint8ArrToString(uint8arr, callback) {
+  const bb = new Blob([uint8arr]);
+  const f = new FileReader();
+  f.onload = function (e) {
+    callback(e.target.result);
+  };
+
+  f.readAsText(bb);
+}
+
 class P2P {
   constructor() {
     this.localPeer = null;
@@ -101,7 +117,7 @@ class P2P {
   }
 
   onConnect() {
-    this.localPeer.send('hey peer');
+    this.localPeer.send(JSON.stringify({ type: 'chat', content: 'hey peer' }));
     console.log('onConnect 🙋🙋🙋🙋🙋');
     if (typeof this._onConnect === 'function') {
       this._onConnect();
@@ -126,7 +142,19 @@ class P2P {
   }
 
   onData(data) {
-    console.log('got data', data);
+    largeuint8ArrToString(data, (string) => {
+      try {
+        const parsed = JSON.parse(string);
+        if (parsed.type === 'chat') {
+          console.log('got chat message', parsed.content);
+        }
+        if (parsed.type && parsed.sdp) {
+          this.localPeer.signal(parsed);
+        }
+      } catch (e) {
+        console.log('e', e);
+      }
+    });
     if (typeof this._onData === 'function') {
       this._onData(data);
     }
@@ -140,7 +168,10 @@ class P2P {
   onSignal(signal) {
     if (signal.type) {
       console.log('🗼🗼🗼🗼🗼🗼 You should relay this signal:', signal.type);
-      if (typeof this._onSignal === 'function') {
+      if (this.localPeer && this.localPeer.connected) {
+        console.log('sending signal over data channel');
+        this.localPeer.send(JSON.stringify(signal));
+      } else if (typeof this._onSignal === 'function') {
         this._onSignal(signal);
       }
     } else {
