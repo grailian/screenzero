@@ -1,10 +1,9 @@
 import * as types from '../action-types';
-import Messages from '../../services/models/messages.model';
-import { remoteStreamSelector } from '../selectors/p2p.selector';
+import Offers from '../../services/models/offers.model';
+import Answers from '../../services/models/answers.model';
+import { currentConversationSelector } from '../selectors/conversations.selector';
 import { userSelector } from '../selectors/user.selector';
 import P2P from '../../services/p2p';
-import { sendChatMessage } from './conversations.actions';
-import debouce from 'lodash/debounce';
 
 function storeRemoteStream(data) {
   return {
@@ -13,9 +12,13 @@ function storeRemoteStream(data) {
   };
 }
 
+function getOtherMember(members, myID) {
+  return Object.keys(members).find(id => id !== myID);
+}
+
 /**
  * Creates a new peer connection with initiator=true
- * Will send a P2P_INIT signal message
+ * Will send a P2P_OFFER signal message
  *
  * @param conversationID
  * @param useVideo
@@ -24,28 +27,30 @@ function storeRemoteStream(data) {
 export function connectToFriend(conversationID, useVideo) {
   return async (dispatch, getState) => {
     try {
-      const remoteStream = remoteStreamSelector(getState());
       console.log('------------connectToFriend------------');
+
+      const user = userSelector(getState());
+      const currentConvo = currentConversationSelector(getState());
+      const otherMemberID = getOtherMember(currentConvo.members, user.uid);
 
       if (P2P.myStream && P2P.localPeer) {
         console.log('ADDING TRACK');
-        await P2P.addTrack(remoteStream);
+        await P2P.addTrack(useVideo);
       } else {
         console.log('🌴🌮🌴🌮🌴🌮🌴CONNECTING FRESH🌴🌮🌴🌮🌴🌮🌴');
 
         // Register signal callback
-        P2P.setOnSignal((signal) => {
-          if (signal.type) {
-            console.log('send P2P_INIT Message', signal.type);
-            const message = {
-              senderID: userSelector(getState()).uid,
-              content: JSON.stringify(signal),
-              type: Messages.TYPES.P2P_INIT,
-              sentDate: new Date(),
+        P2P.setOnSignal(async (outgoingSignal) => {
+          if (outgoingSignal.type === 'offer') {
+            console.log('sending P2P_OFFER Message', outgoingSignal.type);
+            const offer = {
+              fromID: user.uid,
+              toID: otherMemberID,
+              signal: JSON.stringify(outgoingSignal),
             };
-            dispatch(sendChatMessage(conversationID, message));
+            await Offers.sendOffer(conversationID, offer);
           } else {
-            console.log('send P2P_INIT Message', signal);
+            console.log('NOT sending P2P_OFFER Message', outgoingSignal);
           }
         });
 
@@ -57,47 +62,43 @@ export function connectToFriend(conversationID, useVideo) {
   };
 }
 
-let sentConnect = false;
+let sentAnswer = false;
 
 /**
- * Creates a new peer connection with initiator=false
- * Handles a P2P_INIT signal message
- * Will send a P2P_CONNECT signal message
+ * Handles a P2P OFFER signal message
+ * Will send a P2P ANSWER signal message
  *
  * @param conversationID
  * @param message
  * @returns {Function}
  */
-export function handleP2PInitMessage(conversationID, message) {
+export function handleP2POfferMessage(conversationID, message) {
   return async (dispatch, getState) => {
     try {
-      const content = JSON.parse(message.content);
 
-      console.log('received P2P_INIT Message', content.type);
+      console.log('received P2P_OFFER message.id', message.id);
+      console.log('received P2P_OFFER message.fromID', message.fromID);
+      console.log('received P2P_OFFER message.toID', message.toID);
 
+      const incomingSignal = JSON.parse(message.signal);
+      console.log('received P2P_OFFER Message', incomingSignal.type);
       const user = userSelector(getState());
 
       // Register signal callback
-      P2P.setOnSignal((signal) => {
-        if (signal.type) {
-          console.log('sending P2P_CONNECT Message', signal.type);
-          const message = {
-            senderID: user.uid,
-            content: JSON.stringify(signal),
-            type: Messages.TYPES.P2P_CONNECT,
-            sentDate: new Date(),
-          };
-
-          const send = debouce(() => {
-            console.log('sending...');
-            if (!sentConnect) {
-              sentConnect = true;
-              dispatch(sendChatMessage(conversationID, message));
-            }
-          }, 2000);
-          send();
+      P2P.setOnSignal(async (outgoingSignal) => {
+        if (outgoingSignal.type === 'answer') {
+          if (!sentAnswer) {
+            sentAnswer = true;
+            console.log('sending P2P_ANSWER Message', outgoingSignal.type);
+            const answer = {
+              fromID: user.uid,
+              toID: message.fromID,
+              signal: JSON.stringify(outgoingSignal),
+            };
+            await Answers.sendAnswer(conversationID, answer);
+          }
         } else {
-          console.log('NOT sending P2P_CONNECT Message', signal);
+          console.log('NOT sending P2P_ANSWER Message', outgoingSignal);
         }
       });
 
@@ -109,36 +110,46 @@ export function handleP2PInitMessage(conversationID, message) {
         dispatch(storeRemoteStream(stream));
       });
 
-      await P2P.joinConnectionToFriend(content);
+      await P2P.acceptOffer(incomingSignal);
     } catch (error) {
-      console.warn('handleP2PInitMessage error', error);
+      console.warn('handleP2POfferMessage error', error);
     }
   };
 }
 
 /**
+ * Handles a P2P ANSWER signal message
  * Finalizes a peer connection
- * Handles a P2P_CONNECT signal message
  *
  * @param conversationID
  * @param message
  * @returns {Function}
  */
-export function handleP2PConnectMessage(conversationID, message) {
+export function handleP2PAnswerMessage(conversationID, message) {
   return async (dispatch, getState) => {
     try {
-      const content = JSON.parse(message.content);
-      if (content.type) {
-        console.log('received P2P_CONNECT Message', content.type);
+      const incomingSignal = JSON.parse(message.signal);
+      if (incomingSignal.type === 'answer') {
+        console.log('received P2P_ANSWER Message', incomingSignal.type);
+        console.log('content.type', incomingSignal.type);
+        console.log('content', incomingSignal);
+
+        P2P.setOnStream((stream) => {
+          dispatch(storeRemoteStream(stream));
+        });
+
+        P2P.setOnTrack((track, stream) => {
+          dispatch(storeRemoteStream(stream));
+        });
 
         // De-Register signal callback
         P2P.setOnSignal(null);
-        await P2P.joinConnectionToFriend(content);
+        await P2P.acceptAnswer(incomingSignal);
       } else {
-        console.log('received P2P_CONNECT Message', content);
+        console.log('received P2P_ANSWER Message', incomingSignal);
       }
     } catch (error) {
-      console.warn('handleP2PConnectMessage error', error);
+      console.warn('handleP2PAnswerMessage error', error);
     }
   };
 }

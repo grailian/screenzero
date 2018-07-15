@@ -1,9 +1,10 @@
 import * as types from '../action-types';
 import Conversations from '../../services/models/conversations.model';
-import Messages from '../../services/models/messages.model';
+import Offers from '../../services/models/offers.model';
+import Answers from '../../services/models/answers.model';
 import { conversationsSelector } from '../selectors/conversations.selector';
 import { userSelector } from '../selectors/user.selector';
-import { handleP2PConnectMessage, handleP2PInitMessage } from './p2p.actions';
+import { handleP2POfferMessage, handleP2PAnswerMessage } from './p2p.actions';
 
 function storeConversations(data) {
   return {
@@ -33,11 +34,6 @@ export function listenForConversations() {
   };
 }
 
-
-function getOtherMember(members, myID) {
-  return Object.keys(members).find(id => id !== myID);
-}
-
 export function selectConversation(conversationID) {
   return (dispatch, getState) => {
     const conversations = conversationsSelector(getState());
@@ -45,19 +41,18 @@ export function selectConversation(conversationID) {
     dispatch({ type: types.SET_CURRENT_CONVERSATION, data: currentConvo });
 
     const user = userSelector(getState());
-    const otherMemberID = getOtherMember(currentConvo.members, user.uid);
 
-    Messages.listenForP2PInit(conversationID, otherMemberID)
+    Offers.listenForP2POffers(conversationID, user.uid)
       .listen((message) => {
-        dispatch(handleP2PInitMessage(conversationID, message));
+        dispatch(handleP2POfferMessage(conversationID, message));
       })
       .catch((error) => {
-        console.warn('listenForP2PInit error', error);
+        console.warn('listenForP2POffers error', error);
       });
 
-    Messages.listenForP2PConnect(conversationID, otherMemberID)
+    Answers.listenForP2PAnswers(conversationID, user.uid)
       .listen((message) => {
-        dispatch(handleP2PConnectMessage(conversationID, message));
+        dispatch(handleP2PAnswerMessage(conversationID, message));
       })
       .catch((error) => {
         console.warn('listenForP2PInit error', error);

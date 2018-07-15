@@ -4,8 +4,8 @@
   "description": "Remote Screen Sharing And Audio Chat App",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=development electron ./",
-    "start2": "NODE_ENV=development electron ./",
+    "start": "ELECTRON_DISABLE_SECURITY_WARNINGS=true NODE_ENV=development electron ./",
+    "start2": "ELECTRON_DISABLE_SECURITY_WARNINGS=true NODE_ENV=development electron ./",
     "ui": "BROWSER=none react-scripts start",
     "server": "node ./server/server",
     "build": "react-scripts build",

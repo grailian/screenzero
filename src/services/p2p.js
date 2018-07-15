@@ -33,7 +33,7 @@ class P2P {
     try {
       this.myStream = await this.getStream(useVideo);
 
-      console.log('this.myStream.id', this.myStream.getTracks());
+      console.log('this.myStream.id', this.myStream.id);
 
       // Create a peer connection
       this.localPeer = this.newPeer(true, this.myStream);
@@ -43,16 +43,18 @@ class P2P {
     }
   }
 
-  async joinConnectionToFriend(signal) {
-    if (!signal) {
+  async acceptOffer(incomingSignal) {
+    if (!incomingSignal) {
       throw new Error('You must pass in a signal in order to join a connection!');
     }
-
+    if (incomingSignal.type !== 'offer') {
+      throw new Error('You must pass in an "offer" signal in order to join a connection!');
+    }
     if (this.localPeer) {
-      // Signal the peer
-      console.log('final signal');
-      this.localPeer.signal(signal);
-      return this.localPeer;
+      throw new Error('Peer connection already exists, cannot accept any further offers!');
+    }
+    if (this.myStream) {
+      throw new Error('Local Peer stream already exists, which is weird!');
     }
 
     try {
@@ -60,14 +62,29 @@ class P2P {
 
       console.log('this.myStream.id', this.myStream.id);
 
-      // Join a peer connection
+      // Join the peer connection
       this.localPeer = this.newPeer(false, this.myStream);
-      this.localPeer.signal(signal);
-      console.log('signal', signal);
+      this.localPeer.signal(incomingSignal);
       return this.localPeer;
     } catch (err) {
       console.error('failed to getUserMedia', err);
     }
+  }
+
+  async acceptAnswer(incomingSignal) {
+    if (!incomingSignal) {
+      throw new Error('You must pass in a signal in order to finalize a connection!');
+    }
+    if (incomingSignal.type !== 'answer') {
+      throw new Error('You must pass in an "answer" signal in order to finalize a connection!');
+    }
+    if (!this.localPeer) {
+      throw new Error('Peer connection does not exist, cannot accept an answer!');
+    }
+
+    // Finalize the peer connection
+    this.localPeer.signal(incomingSignal);
+    return this.localPeer;
   }
 
   newPeer(initiator, stream) {
@@ -122,12 +139,12 @@ class P2P {
 
   onSignal(signal) {
     if (signal.type) {
-      console.log('signal 🗼🗼🗼🗼🗼🗼', signal.type);
+      console.log('🗼🗼🗼🗼🗼🗼 You should relay this signal:', signal.type);
+      if (typeof this._onSignal === 'function') {
+        this._onSignal(signal);
+      }
     } else {
-      console.log('signal 🗼🗼🗼🗼🗼🗼', signal);
-    }
-    if (typeof this._onSignal === 'function') {
-      this._onSignal(signal);
+      console.log('🗼🗼🗼🗼🗼🗼 DO NOT relay this signal:', signal);
     }
     return this;
   }

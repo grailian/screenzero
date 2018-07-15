@@ -16,6 +16,8 @@ import { remoteStreamSelector } from '../data/selectors/p2p.selector';
 import { userSelector } from '../data/selectors/user.selector';
 import { conversationsSelector, currentConversationSelector } from '../data/selectors/conversations.selector';
 import Messages from '../services/models/messages.model';
+import Offers from '../services/models/offers.model';
+import Answers from '../services/models/answers.model';
 
 class Friends extends React.Component {
   static propTypes = {
@@ -61,6 +63,8 @@ class Friends extends React.Component {
 
   delete = () => {
     Messages.deleteAllMessages(this.props.conversation.id);
+    Offers.deleteAllOffers(this.props.conversation.id);
+    Answers.deleteAllAnswers(this.props.conversation.id);
   };
 
   renderFriends = () => {
@@ -76,7 +80,7 @@ class Friends extends React.Component {
   renderChatMessages = () => {
     if (this.props.conversation && this.props.conversation.messages) {
       return this.props.conversation.messages.map((item) => {
-        if (item.type === Messages.TYPES.P2P_INIT || item.type === Messages.TYPES.P2P_CONNECT) {
+        if (item.type === Messages.TYPES.P2P_OFFER || item.type === Messages.TYPES.P2P_ANSWER) {
           // return item.content;
           return (
             <div key={item.id}>
@@ -102,8 +106,7 @@ class Friends extends React.Component {
         playsInline
         ref={(video) => {
           if (video && this.props.remoteStream) {
-            console.log('video', video);
-            console.log('this.props.remoteStream.getTracks()', this.props.remoteStream.getTracks());
+            // console.log('this.props.remoteStream.getTracks()', this.props.remoteStream.getTracks());
             video.srcObject = this.props.remoteStream;
           }
         }}

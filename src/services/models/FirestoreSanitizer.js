@@ -37,4 +37,10 @@ export default class FirestoreSanitizer {
       return this.document(doc);
     });
   }
+
+  docChanges(changes) {
+    return changes.map((change) => {
+      return this.document(change.doc);
+    });
+  }
 }

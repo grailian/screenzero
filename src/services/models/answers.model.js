@@ -2,7 +2,7 @@ import Listener from '../../helpers/Listener';
 import firebase from '../firebase.service';
 import FirestoreSanitizer from './FirestoreSanitizer';
 
-class MessagesModel {
+class AnswersModel {
   constructor() {
     this.sanitize = new FirestoreSanitizer(this.COLLECTION_PROPS);
   }
@@ -12,8 +12,14 @@ class MessagesModel {
    *
    * @type {string}
    */
-  COLLECTION_NAME = 'messages';
+  COLLECTION_NAME = 'answers';
 
+  /**
+   * Firestore collection name
+   *
+   * @type {string}
+   */
+  PARENT_COLLECTION_NAME = 'conversations';
 
   /**
    * List of available properties for documents in this collections
@@ -21,62 +27,67 @@ class MessagesModel {
    * @type {string[]}
    */
   COLLECTION_PROPS = [
-    'content',
-    'type',
-    'senderID',
+    'signal',
+    'fromID',
+    'toID',
     'sentDate',
   ];
 
-  TYPES = {
-    CHAT: 'CHAT',
-  };
+  parentCollectionRef = firebase.firestore().collection(this.PARENT_COLLECTION_NAME);
 
   subscriptions = {
-    messages: () => null,
-    cancelP2POffers: () => null,
-    cancelP2PAnswers: () => null,
+    cancelAnswers: () => null,
   };
 
   /**
-   * Subscribe to the user's list of chatMessages
+   * Subscribe to incoming P2P answer messages
    *
+   * @param conversationID
+   * @param userID - Current user's ID
    * @returns {Listener}
    */
-  listenForMessages(conversationRef) {
+  listenForP2PAnswers(conversationID, userID) {
     return new Listener((onUpdate, onError) => {
 
-      // Cancel any existing firestore watchers
-      this.subscriptions.messages();
-      this.subscriptions.messages = conversationRef
+      this.subscriptions.cancelAnswers();
+      this.subscriptions.cancelAnswers = this.parentCollectionRef
+        .doc(conversationID)
         .collection(this.COLLECTION_NAME)
-        .orderBy('sentDate', 'asc')
+        .where('toID', '==', userID)
+        .orderBy('sentDate', 'desc')
+        .limit(1)
         .onSnapshot((snapshot) => {
           const messages = this.sanitize.collectionSnapshot(snapshot);
-          onUpdate(messages);
+          if (messages.length > 0) {
+            onUpdate(messages[0]);
+          }
         }, onError);
     });
   }
 
   /**
-   * Send a chatMessage
+   * Send a p2p answer
    *
    * @returns {Promise}
    */
-  sendMessage(conversationRef, data) {
-    return conversationRef
+  sendAnswer(conversationID, data) {
+    return this.parentCollectionRef
+      .doc(conversationID)
       .collection(this.COLLECTION_NAME)
       .doc()
-      .set(this.sanitize.data(data));
+      .set(this.sanitize.data({
+        ...data,
+        sentDate: firebase.firestore.FieldValue.serverTimestamp(),
+      }));
   }
 
   /**
-   * Deletes All Messages
+   * Deletes All Answers
    *
    * @returns {Promise}
    */
-  async deleteAllMessages(conversationID) {
-    return firebase.firestore()
-      .collection('conversations')
+  async deleteAllAnswers(conversationID) {
+    return this.parentCollectionRef
       .doc(conversationID)
       .collection(this.COLLECTION_NAME)
       .get()
@@ -90,4 +101,4 @@ class MessagesModel {
   }
 }
 
-export default new MessagesModel();
+export default new AnswersModel();
