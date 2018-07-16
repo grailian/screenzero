@@ -18,6 +18,7 @@ import { conversationsSelector, currentConversationSelector } from '../data/sele
 import Messages from '../services/models/messages.model';
 import Offers from '../services/models/offers.model';
 import Answers from '../services/models/answers.model';
+import P2P from '../services/p2p'
 
 class Friends extends React.Component {
   static propTypes = {
@@ -33,6 +34,8 @@ class Friends extends React.Component {
 
   state = {
     message: '',
+    videoWidth: null,
+    videoHeight: null
   };
 
   componentDidMount() {
@@ -98,20 +101,37 @@ class Friends extends React.Component {
     return null;
   };
 
+  mouseMoveHandler(event){
+    // console.log(event)
+  }
+
+  mouseClickHandler(event){
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.pageX - rect.left;
+    const y = event.pageY - rect.top;
+    console.log(x, y, rect.width, rect.height)
+    P2P.sendMessage('mouseClick', {x, y, w: rect.width, h: rect.height})
+  }
+
   renderVideo = () => {
-    return (
-      <video
-        style={{ height: '250px', overflow: 'hidden' }}
-        autoPlay
-        playsInline
-        ref={(video) => {
-          if (video && this.props.remoteStream) {
-            // console.log('this.props.remoteStream.getTracks()', this.props.remoteStream.getTracks());
-            video.srcObject = this.props.remoteStream;
-          }
-        }}
-      />
-    );
+    if(this.props.remoteStream){
+      return (
+        <video
+          style={{ height: '250px', overflow: 'hidden' }}
+          autoPlay
+          playsInline
+          onClick={this.mouseClickHandler.bind(this)}
+          onMouseMove={this.mouseMoveHandler.bind(this)}
+          ref={(video) => {
+            if (video && this.props.remoteStream) {
+              // console.log('this.props.remoteStream.getTracks()', this.props.remoteStream.getTracks());
+              video.srcObject = this.props.remoteStream;
+            }
+          }}
+        />
+      );
+    }
+    return null
   };
 
   render() {

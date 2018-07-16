@@ -54,6 +54,7 @@ class OffersModel {
         .doc(conversationID)
         .collection(this.COLLECTION_NAME)
         .where('toID', '==', userID)
+        // .where('sentDate', '>=', Date.now() - 30000)
         .orderBy('sentDate', 'desc')
         .limit(1)
         .onSnapshot((snapshot) => {

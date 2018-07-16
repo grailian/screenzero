@@ -4,13 +4,18 @@
   "description": "Remote Screen Sharing And Audio Chat App",
   "main": "index.js",
   "scripts": {
-    "start": "ELECTRON_DISABLE_SECURITY_WARNINGS=true NODE_ENV=development electron ./",
+    "start": "ELECTRON_DISABLE_SECURITY_WARNINGS=true NODE_ENV=development electron --disable-gpu ./",
     "start2": "ELECTRON_DISABLE_SECURITY_WARNINGS=true NODE_ENV=development electron ./",
     "ui": "BROWSER=none react-scripts start",
     "server": "node ./server/server",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "pre-build": "node ./tools/pre-build",
+    "build-mac": "node ./tools/build-mac",
+    "build-linux": "node ./tools/build-linux",
+    "build-windows": "node ./tools/build-windows",
+    "fix-robotjs": "npm rebuild --runtime=electron --target=3.0.0-beta.2 --disturl=https://atom.io/download/atom-shell --abi=64"
   },
   "keywords": [
     "ScreenZero",
@@ -37,12 +42,14 @@
     "redux-devtools-dock-monitor": "^1.1.3",
     "redux-devtools-log-monitor": "^1.4.0",
     "redux-thunk": "^2.3.0",
+    "robotjs": "^0.5.1",
     "simple-peer": "^9.1.2",
     "socket.io": "^2.1.0",
     "socket.io-client": "^2.1.0"
   },
   "devDependencies": {
     "concurrently": "^3.5.1",
-    "electron": "^3.0.0-beta.1"
+    "electron": "^3.0.0-beta.1",
+    "electron-packager": "^12.1.0"
   }
 }

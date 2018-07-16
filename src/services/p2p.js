@@ -1,5 +1,6 @@
 import Peer from 'simple-peer';
 import { shareScreen } from './renderer';
+const {ipcRenderer} = window.require('electron')
 
 /**
  * Converts an array buffer to a string
@@ -105,7 +106,9 @@ class P2P {
 
   newPeer(initiator, stream) {
     console.log('initiator', initiator);
-    this.localPeer = new Peer({ initiator, stream, trickle: false });
+    this.localPeer = new Peer({
+      initiator, stream, trickle: false
+    });
     this.localPeer.on('signal', this.onSignal.bind(this));
     this.localPeer.on('stream', this.onStream.bind(this));
     this.localPeer.on('connect', this.onConnect.bind(this));
@@ -147,6 +150,10 @@ class P2P {
         const parsed = JSON.parse(string);
         if (parsed.type === 'chat') {
           console.log('got chat message', parsed.content);
+        } else if(parsed.type === 'mouseMove'){
+          this.handleMouseMove(parsed.payload)
+        } else if(parsed.type === 'mouseClick'){
+          this.handleMouseClick(parsed.payload)
         }
         if (parsed.type && parsed.sdp) {
           this.localPeer.signal(parsed);
@@ -164,6 +171,24 @@ class P2P {
   setOnData(callback) {
     this._onData = callback;
   }
+
+  handleMouseMove(payload){
+    console.log('mouseMove', payload)
+
+  }
+
+  handleMouseClick(payload){
+    console.log('mouseClick', payload)
+    const scaleX = window.screen.availWidth / payload.w
+    const scaleY = window.screen.availHeight / payload.h
+    ipcRenderer.send('mouseClick', {x: payload.x * scaleX, y: payload.y * scaleY})
+  }
+
+  sendMessage(type, payload){
+    console.log('sendMessage', type, payload)
+    this.localPeer.send(JSON.stringify({type, payload}))
+  }
+
 
   onSignal(signal) {
     if (signal.type) {

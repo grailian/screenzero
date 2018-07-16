@@ -1,4 +1,5 @@
 const electron = require('electron');
+const ipcMain = electron.ipcMain
 // Module to control application life.
 const app = electron.app;
 // Module to create native browser window.
@@ -6,7 +7,9 @@ const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const url = require('url');
 const appRoot = path.join(__dirname, '..');
+const robot = require('robotjs')
 
+console.log('version', process.version)
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -71,6 +74,14 @@ app.on('activate', function () {
     createWindow();
   }
 });
+
+ipcMain.on('mouseClick', (event, arg) => {
+  console.log('received Mouseclick', arg)
+  let curPos = robot.getMousePos()
+  robot.moveMouse(arg.x, arg.y)
+  robot.mouseClick(arg.button || 'left')
+  // robot.moveMouse(curPos.x, curPos.y)
+})
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
