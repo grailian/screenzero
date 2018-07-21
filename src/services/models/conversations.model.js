@@ -77,10 +77,10 @@ class ConversationsModel {
   }
 
 
-  createConversation(data) {
+  createConversation(members) {
     return this.collectionRef
       .doc()
-      .set(this.sanitize.data(data));
+      .set(this.sanitize.data({members}));
   }
 }
 

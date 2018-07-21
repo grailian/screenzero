@@ -6,6 +6,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import { sendChatMessage } from '../data/actions/conversations.actions';
 import { currentConversationSelector } from '../data/selectors/conversations.selector';
+import { userSelector } from '../data/selectors/user.selector';
 import Messages from '../services/models/messages.model';
 
 class Chat extends React.Component {
@@ -41,6 +42,7 @@ class Chat extends React.Component {
   };
 
   renderChatMessages = () => {
+    console.log('renderChat')
     if (this.props.conversation && this.props.conversation.messages) {
       return this.props.conversation.messages.map((item) => {
         return (
@@ -123,6 +125,7 @@ const styles = {
 const mapStateToProps = (state) => {
   return {
     conversation: currentConversationSelector(state),
+    user: userSelector(state),
   };
 };
 

@@ -23,9 +23,6 @@ export function listenForConversations() {
       .listen((conversations) => {
         dispatch(storeConversations(conversations));
         dispatch({ type: types.LOADING_CONVERSATIONS, data: false });
-
-        // TODO: Remove this eventually
-        dispatch(selectConversation('mTpoKpbbbS4fXuUep3yp'));
       })
       .catch((error) => {
         console.warn('listenForConversations error', error);
@@ -66,6 +63,21 @@ export function sendChatMessage(conversationID, data) {
     Conversations.sendMessageToConversation(conversationID, data)
       .catch((error) => {
         console.warn('sendChatMessage error', error);
+        dispatch({ type: types.LOADING_CHAT_MESSAGES, data: false });
+      });
+  };
+}
+
+export function createConversation(user, friend) {
+  return (dispatch, getState) => {
+    dispatch({ type: types.CREATE_CONVERSATION, data: members });
+    const members = {}
+    members[user] = true
+    members[friend] = true
+    Conversations.createConversation(members)
+      .then()
+      .catch((error) => {
+        console.warn('createConversation error', error);
         dispatch({ type: types.LOADING_CHAT_MESSAGES, data: false });
       });
   };
