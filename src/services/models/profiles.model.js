@@ -93,7 +93,7 @@ class ProfilesModel {
     if (snapshot.size === 1) {
       return this.sanitize.collectionSnapshot(snapshot)[0];
     }
-    return null;
+    throw new Error('Profile not found');
   }
 }
 
