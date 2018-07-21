@@ -57,8 +57,7 @@ class UserModel {
    * @return {Promise<firebase.User>} New User Object
    */
   async createNewUser(email, password) {
-    // TODO: catch errors and handle them appropriately
-    const authResult = await firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(email, password);
+    const authResult = await firebase.auth().createUserWithEmailAndPassword(email, password);
     return this.sanitize.data(authResult.user.toJSON());
   }
 

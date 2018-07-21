@@ -9,7 +9,7 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import User from '../services/models/user.model';
 import { userLoadingSelector, userSelector } from '../data/selectors/user.selector';
 import Loading from './Loading';
-import Login from './Login';
+import LoginOrRegister from './LoginOrRegister';
 import Friends from './Friends';
 
 class Router extends React.Component {
@@ -29,7 +29,7 @@ class Router extends React.Component {
     } else if (this.props.user) {
       return <Friends />;
     } else {
-      return <Login />;
+      return <LoginOrRegister />;
     }
   }
 

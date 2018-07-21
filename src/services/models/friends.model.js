@@ -14,17 +14,29 @@ class FriendsModel {
    */
   COLLECTION_NAME = 'friends';
 
-
   /**
    * List of available properties for documents in this collections
    *
    * @type {string[]}
    */
   COLLECTION_PROPS = [
-    'uid',
-    'displayName',
-    'email',
+    'members',
+    'requestedBy',
+    'requestedDate',
+    'respondedDate',
+    'status',
   ];
+
+  /**
+   * List of available values the friendship status property
+   *
+   * @type {object<string>}
+   */
+  STATUS = {
+    REQUESTED: 'REQUESTED',
+    ACCEPTED: 'ACCEPTED',
+    REJECTED: 'REJECTED',
+  };
 
   collectionRef = firebase.firestore().collection(this.COLLECTION_NAME);
 
@@ -35,18 +47,65 @@ class FriendsModel {
   /**
    * Subscribe to the user's list of friends
    *
+   * @param userID {string} User.uid to listen for friends for
    * @returns {Listener}
    */
-  listenForFriends() {
+  listenForFriends(userID) {
     return new Listener((onUpdate, onError) => {
 
       // Cancel any existing firestore watchers
       this.subscriptions.friends();
-      this.subscriptions.friends = this.collectionRef.onSnapshot((snapshot) => {
-        const friends = this.sanitize.collectionSnapshot(snapshot);
-        onUpdate(friends);
-      }, onError);
+      this.subscriptions.friends = this.collectionRef
+        .where(`members.${userID}`, '==', true)
+        .onSnapshot((snapshot) => {
+          const friends = this.sanitize.collectionSnapshot(snapshot);
+          onUpdate(friends);
+        }, onError);
     });
+  }
+
+  /**
+   * Get a friendship between two users
+   *
+   * @param userID {string} User.uid of the the current user
+   * @param friendID {string} Profile.id of the friend user
+   * @returns {Promise}
+   */
+  async getRequest(userID, friendID) {
+    const friends = await this.collectionRef
+      .where(`members.${userID}`, '==', true)
+      .where(`members.${friendID}`, '==', true)
+      .limit(1)
+      .get()
+      .then(this.sanitize.collectionSnapshot);
+    return friends[0];
+  }
+
+  /**
+   * Send a new friend request
+   *
+   * @param userID {string} User.uid of the user sending the request
+   * @param friendID {string} Profile.id of the user to request
+   * @returns {Promise}
+   */
+  async sendRequest(userID, friendID) {
+    const friend = this.getRequest(userID, friendID);
+    if (friend) {
+      throw new Error('A friendship connection already exists between these two users');
+    }
+    const newFriendship = {
+      members: {
+        [userID]: true,
+        [friendID]: true,
+      },
+      requestedBy: userID,
+      requestedDate: firebase.firestore.FieldValue.serverTimestamp(),
+      respondedDate: null,
+      status: this.STATUS.REQUESTED,
+    };
+    return this.collectionRef
+      .doc()
+      .set(this.sanitize.data(newFriendship));
   }
 }
 

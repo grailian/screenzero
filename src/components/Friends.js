@@ -117,7 +117,7 @@ class Friends extends React.Component {
     if(this.props.remoteStream){
       return (
         <video
-          style={{ height: '250px', overflow: 'hidden' }}
+          style={{ height: '750px', overflow: 'hidden' }}
           autoPlay
           playsInline
           onClick={this.mouseClickHandler.bind(this)}
@@ -157,7 +157,7 @@ class Friends extends React.Component {
             </div>
           </div>
         </Paper>
-        <div style={{ height: '250px', overflow: 'hidden' }}>
+        <div style={{ height: '750px', overflow: 'hidden' }}>
           {this.renderVideo()}
         </div>
         <form style={styles.inputContainer} noValidate onSubmit={this.onSubmit}>

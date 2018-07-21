@@ -6,17 +6,18 @@ import spacing from '@material-ui/core/styles/spacing';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
-import { login } from '../data/actions/auth.actions';
+import { register } from '../data/actions/auth.actions';
 import { userLoadingSelector } from '../data/selectors/user.selector';
 
 class LoginForm extends React.Component {
   static propTypes = {
-    login: PropTypes.func.isRequired,
+    register: PropTypes.func.isRequired,
     onSwitchMode: PropTypes.func.isRequired,
   };
 
   state = {
-    email: this.props.email,
+    displayName: '',
+    email: '',
     password: 'password',
   };
 
@@ -25,7 +26,7 @@ class LoginForm extends React.Component {
 
   onSubmit = (event) => {
     event.preventDefault();
-    this.props.login(this.state.email, this.state.password);
+    this.props.register(this.state.email, this.state.password);
   };
 
   onChange = (field) => {
@@ -40,6 +41,13 @@ class LoginForm extends React.Component {
     return (
       <Paper style={styles.loginContainer}>
         <form style={styles.loginContainer} noValidate onSubmit={this.onSubmit}>
+          <TextField
+            label="Name"
+            type="text"
+            margin="normal"
+            value={this.state.displayName}
+            onChange={this.onChange('displayName')}
+          />
           <TextField
             label="Email"
             type="email"
@@ -62,17 +70,16 @@ class LoginForm extends React.Component {
               type="submit"
               disabled={this.props.loading}
             >
-              Login
+              Create Account
             </Button>
             {this.props.loading && <CircularProgress size={24} style={styles.buttonProgress} />}
           </div>
         </form>
-        <hr />
         <Button
           disabled={this.props.loading}
           onClick={this.props.onSwitchMode}
         >
-          Or Create New Account
+          Or Login To Existing Account
         </Button>
       </Paper>
     );
@@ -109,6 +116,6 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = { login };
+const mapDispatchToProps = { register };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LoginForm);

@@ -5,6 +5,12 @@ export const LOADING_USER = 'LOADING_USER';
 export const SET_USER = 'SET_USER';
 
 // ------------------------------------
+// Profile Actions
+// ------------------------------------
+export const LOADING_PROFILE = 'LOADING_PROFILE';
+export const SET_PROFILE = 'SET_PROFILE';
+
+// ------------------------------------
 // Friends Actions
 // ------------------------------------
 export const LOADING_FRIENDS = 'LOADING_FRIENDS';
