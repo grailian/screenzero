@@ -13,6 +13,8 @@ export const SET_PROFILE = 'SET_PROFILE';
 // ------------------------------------
 // Friends Actions
 // ------------------------------------
+export const LOADING_FRIEND_CONNECTIONS = 'LOADING_FRIEND_CONNECTIONS';
+export const SET_FRIEND_CONNECTIONS = 'SET_FRIEND_CONNECTIONS';
 export const LOADING_FRIENDS = 'LOADING_FRIENDS';
 export const SET_FRIENDS = 'SET_FRIENDS';
 

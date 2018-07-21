@@ -71,14 +71,16 @@ class FriendsModel {
    * @param friendID {string} Profile.id of the friend user
    * @returns {Promise}
    */
-  async getRequest(userID, friendID) {
-    const friends = await this.collectionRef
+  async getFriendConnection(userID, friendID) {
+    const snapshot = await this.collectionRef
       .where(`members.${userID}`, '==', true)
       .where(`members.${friendID}`, '==', true)
       .limit(1)
-      .get()
-      .then(this.sanitize.collectionSnapshot);
-    return friends[0];
+      .get();
+    if (snapshot.size === 1) {
+      return this.sanitize.collectionSnapshot(snapshot)[0];
+    }
+    return null;
   }
 
   /**
@@ -89,8 +91,8 @@ class FriendsModel {
    * @returns {Promise}
    */
   async sendRequest(userID, friendID) {
-    const friend = this.getRequest(userID, friendID);
-    if (friend) {
+    const friendConnection = await this.getFriendConnection(userID, friendID);
+    if (friendConnection) {
       throw new Error('A friendship connection already exists between these two users');
     }
     const newFriendship = {

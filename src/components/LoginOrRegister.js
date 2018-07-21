@@ -22,7 +22,6 @@ class LoginOrRegister extends React.Component {
   };
 
   renderLogin = () => {
-    console.log('------------renderlogin------------');
     return (
       <div style={styles.container}>
         <LoginForm
@@ -38,7 +37,6 @@ class LoginOrRegister extends React.Component {
   };
 
   renderRegister = () => {
-    console.log('------------render register------------');
     return (
       <div style={styles.container}>
         <RegisterForm
@@ -49,7 +47,6 @@ class LoginOrRegister extends React.Component {
   };
 
   render() {
-    console.log('this.state.mode', this.state.mode);
     if (this.state.mode === 'LOGIN') {
       return this.renderLogin();
     }

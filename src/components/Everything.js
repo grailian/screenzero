@@ -1,10 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Button from '@material-ui/core/Button';
 import spacing from '@material-ui/core/styles/spacing';
 import Paper from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import PhoneIcon from '@material-ui/icons/Phone';
 import ScreenShare from '@material-ui/icons/ScreenShare';
@@ -15,7 +13,6 @@ import { conversationsSelector, currentConversationSelector } from '../data/sele
 import Messages from '../services/models/messages.model';
 import Offers from '../services/models/offers.model';
 import Answers from '../services/models/answers.model';
-import P2P from '../services/p2p';
 import Chat from './Chat';
 import Friends from './Friends';
 import RemoteScreen from './RemoteScreen';

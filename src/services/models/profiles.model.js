@@ -64,17 +64,34 @@ class ProfilesModel {
   }
 
   /**
-   * Fetch a user's profile
+   * Fetch a user's profile by User.uid
    *
    * @param userID {string} User.uid of the profile to fetch
    * @returns {Promise<>}
    */
-  async get(userID) {
+  async getByID(userID) {
     const snapshot = await this.collectionRef
       .doc(userID)
       .get();
     if (snapshot.exists) {
       return this.sanitize.document(snapshot);
+    }
+    return null;
+  }
+
+  /**
+   * Fetch a user's profile by email
+   *
+   * @param email {string} email of the profile to fetch
+   * @returns {Promise<>}
+   */
+  async getByEmail(email) {
+    const snapshot = await this.collectionRef
+      .where('email', '==', email)
+      .limit(1)
+      .get();
+    if (snapshot.size === 1) {
+      return this.sanitize.collectionSnapshot(snapshot)[0];
     }
     return null;
   }

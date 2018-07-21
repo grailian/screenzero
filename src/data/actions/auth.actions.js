@@ -1,10 +1,10 @@
 import * as types from '../action-types';
 import User from '../../services/models/user.model';
-import Profile from '../../services/models/profile.model';
+import Profile from '../../services/models/profiles.model';
 import { listenForChatMessages } from './chatMessages.actions';
 import { listenForFriends } from './friends.actions';
 import { listenForConversations } from './conversations.actions';
-import { fetchProfile } from './profile.actions';
+import { fetchProfile, storeProfile } from './profile.actions';
 
 function storeUser(data) {
   return {
@@ -26,6 +26,8 @@ export function initialize() {
           dispatch(listenForFriends());
           dispatch(listenForChatMessages());
           dispatch(listenForConversations());
+        } else {
+          dispatch(storeProfile(null));
         }
       });
   };
