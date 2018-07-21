@@ -1,102 +1,138 @@
+import spacing from '@material-ui/core/styles/spacing';
 import React from 'react';
-import { addChannel, getDataChannel } from '../services/peer';
-import { getPeer, setHostPin, startConnection } from '../services/signal2';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import Button from '@material-ui/core/Button';
+import DeleteIcon from '@material-ui/icons/Delete';
+import TextField from '@material-ui/core/TextField';
+import IconButton from '@material-ui/core/IconButton';
+import { sendChatMessage } from '../data/actions/conversations.actions';
+import { currentConversationSelector } from '../data/selectors/conversations.selector';
+import Messages from '../services/models/messages.model';
 
 class Chat extends React.Component {
-  state = {
-    message: '',
-    messages: [],
-    dataChannel: null,
+  static propTypes = {
+    conversation: PropTypes.object,
   };
 
-  async componentWillReceiveProps(props) {
-    // if (props.peer) {
-    //   this.setState({ connected: true });
-    //   console.log('PEER connected');
-    //
-    //   const dataChannel = await addChannel(props.peer);
-    //   console.log('dataChannel', dataChannel);
-    //   this.setState({ dataChannel });
-    //   props.peer.ondatachannel = (event) => {
-    //     console.log('ondatachannel:', event.channel);
-    //     const dataChannel = event.channel;
-    //     this.onDataChannelCreated(dataChannel);
-    //     this.setState({ dataChannel });
-    //   };
-    // }
-  }
+  static defaultProps = {
+    conversation: null,
+  };
 
-  onDataChannelCreated = (channel) => {
-    channel.onmessage = (event) => {
-      console.log('event.data', event.data);
-      // addChatMessage('Peer:' + event.data);
+  state = {
+    message: '',
+  };
+
+  onChange = (field) => {
+    return (event) => {
+      this.setState({
+        [field]: event.target.value,
+      });
     };
   };
 
-  sendMessage = () => {
-    // const dataChannel = this.state.dataChannel;
-    // console.log('dataChannel', dataChannel);
-    //
-    // if (!dataChannel) {
-    //   console.warn('Connection has not been initiated. Get two peers in the same room first');
-    //   return;
-    // } else if (dataChannel.readyState === 'closed') {
-    //   console.warn('Connection was lost. Peer closed the connection.');
-    //   return;
-    // } else if (dataChannel.readyState !== 'open') {
-    //   console.warn('Connection not ready: ' + dataChannel.readyState);
-    //   return;
-    // }
-    // console.log('dataChannel.readyState', dataChannel.readyState);
-    // dataChannel.send(this.state.message);
-    // this.setState({
-    //   messages: [...this.state.messages, 'ME: ' + this.state.message],
-    // });
-
-    const peer = getPeer();
-    console.log('peer', peer);
-    console.log('this.state.message', this.state.message);
-    if (peer) {
-      peer.send(JSON.stringify({ type: 'message', data: this.state.message }));
-    }
-  };
-
-  sendChat = (event) => {
+  onSubmit = (event) => {
     event.preventDefault();
-    // if (!this.state.dataChannel) {
-    // const dataChannel = addChannel(this.props.peer);
-    // this.setState({ dataChannel }, this.sendMessage);
-    // } else {
-    this.sendMessage();
-    // }
-  };
-
-  onChange = (event) => {
-    this.setState({ message: event.target.value });
-  };
-
-  renderMessages = () => {
-    return this.state.messages.map((msg, i) => {
-      return (
-        <div key={i}>{msg}</div>
-      );
+    this.props.sendChatMessage(this.props.conversation.id, {
+      senderID: this.props.user.uid,
+      content: this.state.message,
+      type: Messages.TYPES.CHAT,
+      sentDate: new Date(),
     });
+    this.setState({ message: '' });
+  };
+
+  renderChatMessages = () => {
+    if (this.props.conversation && this.props.conversation.messages) {
+      return this.props.conversation.messages.map((item) => {
+        return (
+          <div key={item.id}>
+            {item.content}
+          </div>
+        );
+      });
+    }
+    return null;
+  };
+
+  renderForm = () => {
+    if (this.props.conversation) {
+      return (
+        <form style={styles.inputContainer} noValidate onSubmit={this.onSubmit}>
+          <TextField
+            label="Message"
+            type="text"
+            // margin="normal"
+            value={this.state.message}
+            style={{ flexGrow: 1 }}
+            onChange={this.onChange('message')}
+          />
+          <div style={styles.wrapper}>
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={this.props.loading}
+            >
+              Send
+            </Button>
+          </div>
+        </form>
+      );
+    }
+    return null;
   };
 
   render() {
     return (
-      <div>
-        <h3>Chat</h3>
-        <form onSubmit={this.sendChat}>
-          <input id="chatInput" type="text" value={this.state.message} onChange={this.onChange} />
-          <button id="chatSendBtn">Share</button>
-        </form>
-        <div>
-          {this.renderMessages()}
+      <div style={styles.container}>
+        <h4>
+          Chat
+        </h4>
+        <div style={{ overflow: 'scroll' }}>
+          {this.renderChatMessages()}
         </div>
+        {this.renderForm()}
       </div>
     );
   }
 }
 
-export default Chat;
+const styles = {
+  container: {
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  contentContainer: {
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'row',
+    // alignItems: 'center',
+    // justifyContent: 'center',
+  },
+  wrapper: {
+    margin: spacing.unit,
+    position: 'relative',
+  },
+  inputContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    padding: spacing.unit,
+  },
+};
+
+const mapStateToProps = (state) => {
+  console.log('currentConversationSelector(state)', currentConversationSelector(state));
+  console.log('state', state);
+  return {
+    conversation: currentConversationSelector(state),
+  };
+};
+
+const mapDispatchToProps = {
+  sendChatMessage,
+};
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(Chat);

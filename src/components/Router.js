@@ -10,7 +10,7 @@ import User from '../services/models/user.model';
 import { userLoadingSelector, userSelector } from '../data/selectors/user.selector';
 import Loading from './Loading';
 import LoginOrRegister from './LoginOrRegister';
-import Friends from './Friends';
+import Everything from './Everything';
 
 class Router extends React.Component {
   static propTypes = {
@@ -27,7 +27,7 @@ class Router extends React.Component {
     if (this.props.loading) {
       return <Loading />;
     } else if (this.props.user) {
-      return <Friends />;
+      return <Everything />;
     } else {
       return <LoginOrRegister />;
     }

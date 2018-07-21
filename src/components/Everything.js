@@ -8,7 +8,6 @@ import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import PhoneIcon from '@material-ui/icons/Phone';
 import ScreenShare from '@material-ui/icons/ScreenShare';
-import { sendFriendRequest } from '../data/actions/friends.actions';
 import { connectToFriend } from '../data/actions/p2p.actions';
 import { friendsSelector } from '../data/selectors/friends.selector';
 import { userSelector } from '../data/selectors/user.selector';
@@ -18,9 +17,10 @@ import Offers from '../services/models/offers.model';
 import Answers from '../services/models/answers.model';
 import P2P from '../services/p2p';
 import Chat from './Chat';
+import Friends from './Friends';
 import RemoteScreen from './RemoteScreen';
 
-class Friends extends React.Component {
+class Everything extends React.Component {
   static propTypes = {
     user: PropTypes.object,
     friends: PropTypes.array,
@@ -32,46 +32,35 @@ class Friends extends React.Component {
     conversations: [],
   };
 
-  state = {
-    email: '',
+  state = {};
+
+  componentDidMount() {
+  }
+
+  onConnect = (useVideo) => {
+    this.props.connectToFriend(this.props.conversation.id, useVideo);
   };
 
-  onChange = (field) => {
-    return (event) => {
-      this.setState({
-        [field]: event.target.value,
-      });
-    };
+  delete = () => {
+    Messages.deleteAllMessages(this.props.conversation.id);
+    Offers.deleteAllOffers(this.props.conversation.id);
+    Answers.deleteAllAnswers(this.props.conversation.id);
   };
 
-  onSubmit = (event) => {
-    event.preventDefault();
-    this.props.sendFriendRequest(this.state.email);
-    this.setState({ email: '' });
-  };
-
-  startAudioCall = () => {
-    this.props.connectToFriend(this.props.conversation.id, false);
-  };
-
-  startSharingScreen = () => {
-    this.props.connectToFriend(this.props.conversation.id, true);
-  };
-
-  renderFriendsList = () => {
+  renderFriends = () => {
     return this.props.friends.map((item) => {
       return (
         <div key={item.id}>
           {item.id}
 
           <IconButton
-            onClick={this.startAudioCall}
+            onClick={this.onConnect.bind(this, false)}
             disabled={this.props.loading}>
             <PhoneIcon />
           </IconButton>
 
           <IconButton
-            onClick={this.startSharingScreen}
+            onClick={this.onConnect.bind(this, true)}
             disabled={this.props.loading}>
             <ScreenShare />
           </IconButton>
@@ -80,39 +69,16 @@ class Friends extends React.Component {
     });
   };
 
-  renderForm = () => {
-    return (
-      <form style={styles.inputContainer} noValidate onSubmit={this.onSubmit}>
-        <TextField
-          label="Email of contact to add"
-          type="email"
-          // margin="normal"
-          value={this.state.email}
-          style={{ flexGrow: 1 }}
-          onChange={this.onChange('email')}
-        />
-        <div style={styles.wrapper}>
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            disabled={this.props.loading}
-          >
-            Add
-          </Button>
-        </div>
-      </form>
-    );
-  };
-
   render() {
     return (
       <div style={styles.container}>
-        <h4>Friends</h4>
-        <div style={{ overflow: 'scroll' }}>
-          {this.renderFriendsList()}
+        <Paper style={styles.contentContainer}>
+          <Friends />
+          <Chat />
+        </Paper>
+        <div style={{ flex: 1 }}>
+          <RemoteScreen />
         </div>
-        {this.renderForm()}
       </div>
     );
   }
@@ -123,6 +89,13 @@ const styles = {
     flexGrow: 1,
     display: 'flex',
     flexDirection: 'column',
+  },
+  contentContainer: {
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'row',
+    // alignItems: 'center',
+    // justifyContent: 'center',
   },
   inputContainer: {
     display: 'flex',
@@ -140,6 +113,6 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = { connectToFriend, sendFriendRequest };
+const mapDispatchToProps = { connectToFriend };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Friends);
+export default connect(mapStateToProps, mapDispatchToProps)(Everything);

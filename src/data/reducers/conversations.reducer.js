@@ -23,7 +23,7 @@ function data(state = initialStateData, action) {
   }
 }
 
-const initialStateSelected = [];
+const initialStateSelected = null;
 
 function selected(state = initialStateSelected, action) {
   switch (action.type) {

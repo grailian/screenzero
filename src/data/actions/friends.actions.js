@@ -1,5 +1,6 @@
 import * as types from '../action-types';
 import Friends from '../../services/models/friends.model';
+import { userSelector } from '../selectors/user.selector';
 
 function storeFriends(data) {
   return {
@@ -20,5 +21,19 @@ export function listenForFriends() {
         console.warn('listenForFriends error', error);
         dispatch({ type: types.LOADING_FRIENDS, data: false });
       });
+  };
+}
+
+export function sendFriendRequest(email) {
+  return async (dispatch, getState) => {
+    try {
+      dispatch({ type: types.LOADING_FRIENDS, data: true });
+      const user = userSelector(getState());
+      await Friends.sendRequest(user.uid, email);
+      dispatch({ type: types.LOADING_FRIENDS, data: false });
+    } catch (error) {
+      console.warn('sendFriendRequest error', error);
+      dispatch({ type: types.LOADING_FRIENDS, data: false });
+    }
   };
 }
