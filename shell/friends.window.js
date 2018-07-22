@@ -19,6 +19,7 @@ class FriendsWindow {
     this.window = new BrowserWindow({
       width: 740,
       height: 1000,
+      backgroundColor: '#2e2c29',
       webPreferences: {
         // nodeIntegration: false
       },

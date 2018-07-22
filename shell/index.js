@@ -4,6 +4,7 @@ const app = electron.app;
 const packageDetails = require('../package.json');
 require('./mouse.ipc');
 const FriendsWindow = require('./friends.window').FriendsWindow;
+const MouseWindow = require('./mouse.window').MouseWindow;
 const AppTray = require('./app.tray').AppTray;
 
 // ------------------------------------
@@ -19,6 +20,7 @@ global.appVersion = packageDetails.version;
 // ------------------------------------
 app.on('ready', () => {
   new FriendsWindow(app);
+  new MouseWindow(app);
   // new AppTray();
 });
 
