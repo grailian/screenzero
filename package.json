@@ -2,7 +2,7 @@
   "name": "screenzero",
   "version": "1.0.0",
   "description": "Remote Screen Sharing And Audio Chat App",
-  "main": "index.js",
+  "main": "./shell/index.js",
   "scripts": {
     "start": "ELECTRON_DISABLE_SECURITY_WARNINGS=true NODE_ENV=development electron --disable-gpu ./",
     "start2": "ELECTRON_DISABLE_SECURITY_WARNINGS=true NODE_ENV=development electron ./",
