@@ -40,7 +40,7 @@ class RemoteScreen extends React.Component {
 
   render() {
     return (
-      <div>
+      <div style={{ flex: 1 }}>
         <h3>Viewing Remote Screen</h3>
         {this.renderVideo()}
       </div>

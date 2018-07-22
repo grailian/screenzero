@@ -12,7 +12,7 @@ import { connectToFriend } from '../data/actions/p2p.actions';
 import { composedFriendsLoadingSelector, composedFriendsSelector } from '../data/selectors/friends.selector';
 import { userSelector } from '../data/selectors/user.selector';
 import { conversationsSelector, currentConversationSelector } from '../data/selectors/conversations.selector';
-import { selectConversation, createConversation } from '../data/actions/conversations.actions'
+import { selectConversation, createConversation } from '../data/actions/conversations.actions';
 
 class Friends extends React.Component {
   static propTypes = {
@@ -53,30 +53,29 @@ class Friends extends React.Component {
   };
 
   setCurrentConversation = (friend) => {
-    if(friend.id){
+    if (friend.id) {
       // this.props.conversations
-      let foundConvo = false
-      for(let i in this.props.conversations){
-        console.log('convo', this.props.conversations[i])
-        if(this.props.conversations[i].members[friend.id]){
-          this.props.selectConversation(this.props.conversations[i].id)
-          foundConvo = true
+      let foundConvo = false;
+      for (let i in this.props.conversations) {
+        if (this.props.conversations[i].members[friend.id]) {
+          this.props.selectConversation(this.props.conversations[i].id);
+          foundConvo = true;
           break;
         }
       }
 
-      if(!foundConvo){
-        this.props.createConversation(this.props.user.uid, friend.id)
+      if (!foundConvo) {
+        this.props.createConversation(this.props.user.uid, friend.id);
         //TODO: probably not the best way to do this
-        setTimeout(this.setCurrentConversation.bind(this, friend), 1000)
+        setTimeout(this.setCurrentConversation.bind(this, friend), 1000);
       }
     }
-  }
+  };
 
   renderFriendsList = () => {
     return this.props.friends.map((item) => {
       return (
-        <div key={item.id} onClick={this.setCurrentConversation.bind(this,item.friend)}>
+        <div key={item.id} onClick={this.setCurrentConversation.bind(this, item.friend)}>
           {item.friend && item.friend.email}
 
           <IconButton

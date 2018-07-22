@@ -42,7 +42,6 @@ class Chat extends React.Component {
   };
 
   renderChatMessages = () => {
-    console.log('renderChat')
     if (this.props.conversation && this.props.conversation.messages) {
       return this.props.conversation.messages.map((item) => {
         return (

@@ -2,7 +2,6 @@ import * as types from '../action-types';
 import Conversations from '../../services/models/conversations.model';
 import Offers from '../../services/models/offers.model';
 import Answers from '../../services/models/answers.model';
-import { conversationsSelector } from '../selectors/conversations.selector';
 import { userSelector } from '../selectors/user.selector';
 import { handleP2POfferMessage, handleP2PAnswerMessage } from './p2p.actions';
 
@@ -33,9 +32,7 @@ export function listenForConversations() {
 
 export function selectConversation(conversationID) {
   return (dispatch, getState) => {
-    const conversations = conversationsSelector(getState());
-    const currentConvo = conversations.find(c => c.id === conversationID);
-    dispatch({ type: types.SET_CURRENT_CONVERSATION, data: currentConvo });
+    dispatch({ type: types.SET_CURRENT_CONVERSATION, data: conversationID });
 
     const user = userSelector(getState());
 
@@ -68,12 +65,12 @@ export function sendChatMessage(conversationID, data) {
   };
 }
 
-export function createConversation(user, friend) {
+export function createConversation(userID, friendID) {
   return (dispatch, getState) => {
-    dispatch({ type: types.CREATE_CONVERSATION, data: members });
-    const members = {}
-    members[user] = true
-    members[friend] = true
+    const members = {
+      [userID]: true,
+      [friendID]: true,
+    };
     Conversations.createConversation(members)
       .then()
       .catch((error) => {

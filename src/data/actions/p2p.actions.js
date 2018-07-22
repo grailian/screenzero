@@ -33,6 +33,9 @@ export function connectToFriend(conversationID, useVideo) {
       const currentConvo = currentConversationSelector(getState());
       const otherMemberID = getOtherMember(currentConvo.members, user.uid);
 
+      await Offers.deleteAllOffers(conversationID);
+      await Answers.deleteAllAnswers(conversationID);
+
       if (P2P.myStream && P2P.localPeer) {
         console.log('ADDING TRACK');
         await P2P.addTrack(useVideo);
@@ -96,6 +99,7 @@ export function handleP2POfferMessage(conversationID, message) {
               signal: JSON.stringify(outgoingSignal),
             };
             await Answers.sendAnswer(conversationID, answer);
+            await Offers.deleteAllOffers(conversationID);
           }
         } else {
           console.log('NOT sending P2P_ANSWER Message', outgoingSignal);
@@ -145,6 +149,7 @@ export function handleP2PAnswerMessage(conversationID, message) {
         // De-Register signal callback
         P2P.setOnSignal(null);
         await P2P.acceptAnswer(incomingSignal);
+        await Answers.deleteAllAnswers(conversationID);
       } else {
         console.log('received P2P_ANSWER Message', incomingSignal);
       }

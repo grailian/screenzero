@@ -73,7 +73,7 @@ class Everything extends React.Component {
           <Friends />
           <Chat />
         </Paper>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, display: 'flex' }}>
           <RemoteScreen />
         </div>
       </div>

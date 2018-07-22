@@ -9,5 +9,7 @@ export const conversationsSelector = (state) => {
 };
 
 export const currentConversationSelector = (state) => {
-  return _.get(state, 'conversations.selected', null);
+  const id = _.get(state, 'conversations.selected', null);
+  const conversations = conversationsSelector(state);
+  return conversations.find(c => c.id === id);
 };
