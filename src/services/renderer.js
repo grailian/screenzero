@@ -18,10 +18,10 @@ function shareScreen() {
               mandatory: {
                 chromeMediaSource: 'desktop',
                 chromeMediaSourceId: sources[i].id,
-                minWidth: 1280,
-                maxWidth: 1280,
-                minHeight: 720,
-                maxHeight: 720,
+                minWidth: 1024,
+                maxWidth: 2560,
+                minHeight: 600,
+                maxHeight: 1440,
               },
             },
           })
