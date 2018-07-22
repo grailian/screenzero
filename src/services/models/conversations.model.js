@@ -45,23 +45,20 @@ class ConversationsModel {
       this.subscriptions.conversations = this.collectionRef
         .where(`members.${userID}`, '==', true)
         .onSnapshot((snapshot) => {
-          const conversations = this.sanitize.collectionSnapshot(snapshot);
+          let conversations = this.sanitize.collectionSnapshot(snapshot);
+
           conversations.forEach(conversation => {
             Messages.listenForMessages(this.collectionRef.doc(conversation.id))
-              .listen(messages => {
-                const convos = conversations.map(c => {
+              .listen((messages) => {
+                conversations = conversations.map(c => {
                   if (c.id === conversation.id) {
-                    return {
-                      ...conversation,
-                      messages,
-                    };
+                    return { ...conversation, messages };
                   }
                   return c;
                 });
-                onUpdate(convos);
+                onUpdate(conversations);
               });
           });
-
         }, onError);
     });
   }
@@ -76,11 +73,32 @@ class ConversationsModel {
     return Messages.sendMessage(conversationRef, data);
   }
 
+  /**
+   * Fetches a conversation by ID
+   *
+   * @param convoID
+   * @returns {Promise<>}
+   */
+  async getByID(convoID) {
+    const doc = await this.collectionRef
+      .doc(convoID)
+      .get();
+    if (doc.exists) {
+      return this.sanitize.document(doc);
+    }
+    return null;
+  }
 
-  createConversation(members) {
-    return this.collectionRef
-      .doc()
-      .set(this.sanitize.data({members}));
+  /**
+   * Creates a new conversation
+   *
+   * @param members
+   * @returns {Promise<>}
+   */
+  async createConversation(members) {
+    const ref = this.collectionRef.doc();
+    await ref.set(this.sanitize.data({ members }));
+    return this.getByID(ref.id);
   }
 }
 

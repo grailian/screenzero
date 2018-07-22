@@ -1,7 +1,6 @@
 import * as types from '../action-types';
 import Offers from '../../services/models/offers.model';
 import Answers from '../../services/models/answers.model';
-import { currentConversationSelector } from '../selectors/conversations.selector';
 import { userSelector } from '../selectors/user.selector';
 import P2P from '../../services/p2p';
 
@@ -20,21 +19,20 @@ function getOtherMember(members, myID) {
  * Creates a new peer connection with initiator=true
  * Will send a P2P_OFFER signal message
  *
- * @param conversationID
+ * @param conversation
  * @param useVideo
  * @returns {Function}
  */
-export function connectToFriend(conversationID, useVideo) {
+export function connectToFriend(conversation, useVideo) {
   return async (dispatch, getState) => {
     try {
       console.log('------------connectToFriend------------');
 
       const user = userSelector(getState());
-      const currentConvo = currentConversationSelector(getState());
-      const otherMemberID = getOtherMember(currentConvo.members, user.uid);
+      const otherMemberID = getOtherMember(conversation.members, user.uid);
 
-      await Offers.deleteAllOffers(conversationID);
-      await Answers.deleteAllAnswers(conversationID);
+      await Offers.deleteAllOffers(conversation.id);
+      await Answers.deleteAllAnswers(conversation.id);
 
       if (P2P.myStream && P2P.localPeer) {
         console.log('ADDING TRACK');
@@ -51,7 +49,7 @@ export function connectToFriend(conversationID, useVideo) {
               toID: otherMemberID,
               signal: JSON.stringify(outgoingSignal),
             };
-            await Offers.sendOffer(conversationID, offer);
+            await Offers.sendOffer(conversation.id, offer);
           } else {
             console.log('NOT sending P2P_OFFER Message', outgoingSignal);
           }
@@ -62,6 +60,40 @@ export function connectToFriend(conversationID, useVideo) {
     } catch (error) {
       console.warn('connectToFriend error', error);
     }
+  };
+}
+
+export function listenForP2POffers(conversations) {
+  return (dispatch, getState) => {
+    const user = userSelector(getState());
+    const conversationIDs = conversations.map(c => c.id);
+
+    Offers.listenForP2POffers(conversationIDs, user.uid)
+      .listen((offersByConvoID) => {
+        Object.keys(offersByConvoID).forEach((convoID) => {
+          dispatch(handleP2POfferMessage(convoID, offersByConvoID[convoID]));
+        });
+      })
+      .catch((error) => {
+        console.warn('listenForP2POffers error', error);
+      });
+  };
+}
+
+export function listenForP2PAnswers(conversations) {
+  return (dispatch, getState) => {
+    const user = userSelector(getState());
+    const conversationIDs = conversations.map(c => c.id);
+
+    Answers.listenForP2PAnswers(conversationIDs, user.uid)
+      .listen((offersByConvoID) => {
+        Object.keys(offersByConvoID).forEach((convoID) => {
+          dispatch(handleP2PAnswerMessage(convoID, offersByConvoID[convoID]));
+        });
+      })
+      .catch((error) => {
+        console.warn('listenForP2PInit error', error);
+      });
   };
 }
 

@@ -6,11 +6,15 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import AccountCircle from '@material-ui/icons/AccountCircle';
+import { currentConversationSelector } from '../data/selectors/conversations.selector';
+import { remoteStreamSelector } from '../data/selectors/p2p.selector';
 import User from '../services/models/user.model';
 import { userLoadingSelector, userSelector } from '../data/selectors/user.selector';
+import Chat from './Chat';
+import Friends from './Friends';
 import Loading from './Loading';
 import LoginOrRegister from './LoginOrRegister';
-import Everything from './Everything';
+import RemoteScreen from './RemoteScreen';
 
 class Router extends React.Component {
   static propTypes = {
@@ -26,11 +30,19 @@ class Router extends React.Component {
   renderContent() {
     if (this.props.loading) {
       return <Loading />;
-    } else if (this.props.user) {
-      return <Everything />;
-    } else {
-      return <LoginOrRegister />;
     }
+
+    if (this.props.user) {
+      if (this.props.remoteStream) {
+        return <RemoteScreen />;
+      }
+      if (this.props.conversation) {
+        return <Chat />;
+      }
+      return <Friends />;
+    }
+
+    return <LoginOrRegister />;
   }
 
   render() {
@@ -57,6 +69,8 @@ const mapStateToProps = (state) => {
   return {
     loading: userLoadingSelector(state),
     user: userSelector(state),
+    conversation: currentConversationSelector(state),
+    remoteStream: remoteStreamSelector(state),
   };
 };
 

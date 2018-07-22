@@ -36,33 +36,39 @@ class OffersModel {
   parentCollectionRef = firebase.firestore().collection(this.PARENT_COLLECTION_NAME);
 
   subscriptions = {
-    cancelOffers: () => null,
+    byConvoID: {},
   };
 
   /**
    * Subscribe to incoming P2P offer messages
    *
-   * @param conversationID
+   * @param conversationIDs
    * @param userID - Current user's ID
    * @returns {Listener}
    */
-  listenForP2POffers(conversationID, userID) {
+  listenForP2POffers(conversationIDs, userID) {
     return new Listener((onUpdate, onError) => {
-
-      this.subscriptions.cancelOffers();
-      this.subscriptions.cancelOffers = this.parentCollectionRef
-        .doc(conversationID)
-        .collection(this.COLLECTION_NAME)
-        .where('toID', '==', userID)
-        // .where('sentDate', '>=', Date.now() - 30000)
-        .orderBy('sentDate', 'desc')
-        .limit(1)
-        .onSnapshot((snapshot) => {
-          const messages = this.sanitize.collectionSnapshot(snapshot);
-          if (messages.length > 0) {
-            onUpdate(messages[0]);
-          }
-        }, onError);
+      const offersByConvoID = {};
+      conversationIDs.forEach(convoID => {
+        if (this.subscriptions.byConvoID[convoID]) {
+          this.subscriptions.byConvoID[convoID]();
+        }
+        this.subscriptions.byConvoID[convoID] = this.parentCollectionRef
+          .doc(convoID)
+          .collection(this.COLLECTION_NAME)
+          .where('toID', '==', userID)
+          .orderBy('sentDate', 'desc')
+          .limit(1)
+          .onSnapshot((snapshot) => {
+            const messages = this.sanitize.collectionSnapshot(snapshot);
+            if (messages.length > 0) {
+              onUpdate({
+                ...offersByConvoID,
+                [convoID]: messages[0],
+              });
+            }
+          }, onError);
+      });
     });
   }
 

@@ -32,9 +32,7 @@ class MessagesModel {
   };
 
   subscriptions = {
-    messages: () => null,
-    cancelP2POffers: () => null,
-    cancelP2PAnswers: () => null,
+    byConvoID: {},
   };
 
   /**
@@ -46,8 +44,10 @@ class MessagesModel {
     return new Listener((onUpdate, onError) => {
 
       // Cancel any existing firestore watchers
-      this.subscriptions.messages();
-      this.subscriptions.messages = conversationRef
+      if (this.subscriptions.byConvoID[conversationRef.id]) {
+        this.subscriptions.byConvoID[conversationRef.id]();
+      }
+      this.subscriptions.byConvoID[conversationRef.id] = conversationRef
         .collection(this.COLLECTION_NAME)
         .orderBy('sentDate', 'asc')
         .onSnapshot((snapshot) => {

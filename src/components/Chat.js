@@ -1,11 +1,14 @@
-import spacing from '@material-ui/core/styles/spacing';
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import BackIcon from '@material-ui/icons/ArrowBack';
+import spacing from '@material-ui/core/styles/spacing';
 import TextField from '@material-ui/core/TextField';
-import { sendChatMessage } from '../data/actions/conversations.actions';
+import { selectConversation, sendChatMessage } from '../data/actions/conversations.actions';
 import { currentConversationSelector } from '../data/selectors/conversations.selector';
+import { friendsSelector } from '../data/selectors/friends.selector';
 import { userSelector } from '../data/selectors/user.selector';
 import Messages from '../services/models/messages.model';
 
@@ -20,6 +23,18 @@ class Chat extends React.Component {
 
   state = {
     message: '',
+  };
+
+
+  getOtherMember = () => {
+    if (this.props.conversation && this.props.user) {
+      const friendID = Object.keys(this.props.conversation.members).find(id => id !== this.props.user.uid);
+      if (friendID && this.props.friends) {
+        const friend = this.props.friends.find(f => f.id === friendID);
+        return friend ? friend.email : '';
+      }
+    }
+    return '';
   };
 
   onChange = (field) => {
@@ -44,8 +59,9 @@ class Chat extends React.Component {
   renderChatMessages = () => {
     if (this.props.conversation && this.props.conversation.messages) {
       return this.props.conversation.messages.map((item) => {
+        const self = item.senderID === this.props.user.uid;
         return (
-          <div key={item.id}>
+          <div key={item.id} style={{ alignSelf: self ? 'flex-end' : 'flex-start' }}>
             {item.content}
           </div>
         );
@@ -86,9 +102,14 @@ class Chat extends React.Component {
     return (
       <div style={styles.container}>
         <h4>
-          Chat
+          <IconButton
+            onClick={() => this.props.selectConversation(null)}
+            disabled={this.props.loading}>
+            <BackIcon />
+          </IconButton>
+          Chat ({this.getOtherMember()})
         </h4>
-        <div style={{ overflow: 'scroll' }}>
+        <div style={styles.contentContainer}>
           {this.renderChatMessages()}
         </div>
         {this.renderForm()}
@@ -104,11 +125,11 @@ const styles = {
     flexDirection: 'column',
   },
   contentContainer: {
+    overflow: 'scroll',
     flexGrow: 1,
     display: 'flex',
-    flexDirection: 'row',
-    // alignItems: 'center',
-    // justifyContent: 'center',
+    flexDirection: 'column',
+    margin: spacing.unit,
   },
   wrapper: {
     margin: spacing.unit,
@@ -125,11 +146,13 @@ const mapStateToProps = (state) => {
   return {
     conversation: currentConversationSelector(state),
     user: userSelector(state),
+    friends: friendsSelector(state),
   };
 };
 
 const mapDispatchToProps = {
   sendChatMessage,
+  selectConversation,
 };
 
 

@@ -1,9 +1,7 @@
 import * as types from '../action-types';
 import Conversations from '../../services/models/conversations.model';
-import Offers from '../../services/models/offers.model';
-import Answers from '../../services/models/answers.model';
 import { userSelector } from '../selectors/user.selector';
-import { handleP2POfferMessage, handleP2PAnswerMessage } from './p2p.actions';
+import { listenForP2POffers, listenForP2PAnswers } from './p2p.actions';
 
 function storeConversations(data) {
   return {
@@ -21,6 +19,8 @@ export function listenForConversations() {
     Conversations.listenForConversations(user.uid)
       .listen((conversations) => {
         dispatch(storeConversations(conversations));
+        dispatch(listenForP2POffers(conversations));
+        dispatch(listenForP2PAnswers(conversations));
         dispatch({ type: types.LOADING_CONVERSATIONS, data: false });
       })
       .catch((error) => {
@@ -33,24 +33,6 @@ export function listenForConversations() {
 export function selectConversation(conversationID) {
   return (dispatch, getState) => {
     dispatch({ type: types.SET_CURRENT_CONVERSATION, data: conversationID });
-
-    const user = userSelector(getState());
-
-    Offers.listenForP2POffers(conversationID, user.uid)
-      .listen((message) => {
-        dispatch(handleP2POfferMessage(conversationID, message));
-      })
-      .catch((error) => {
-        console.warn('listenForP2POffers error', error);
-      });
-
-    Answers.listenForP2PAnswers(conversationID, user.uid)
-      .listen((message) => {
-        dispatch(handleP2PAnswerMessage(conversationID, message));
-      })
-      .catch((error) => {
-        console.warn('listenForP2PInit error', error);
-      });
   };
 }
 
@@ -71,11 +53,9 @@ export function createConversation(userID, friendID) {
       [userID]: true,
       [friendID]: true,
     };
-    Conversations.createConversation(members)
-      .then()
+    return Conversations.createConversation(members)
       .catch((error) => {
         console.warn('createConversation error', error);
-        dispatch({ type: types.LOADING_CHAT_MESSAGES, data: false });
       });
   };
 }

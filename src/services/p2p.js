@@ -188,6 +188,8 @@ class P2P {
 
   sendMessage(type, payload){
     console.log('sendMessage', type, payload)
+    console.log('this.localPeer', this.localPeer);
+    if (this.localPeer)
     this.localPeer.send(JSON.stringify({type, payload}))
   }
 
