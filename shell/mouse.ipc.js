@@ -11,3 +11,9 @@ ipcMain.on('mouseClick', (event, arg) => {
     // robot.moveMouse(curPos.x, curPos.y);
   }, 50);
 });
+
+ipcMain.on('mouseMove', (event, arg) => {
+  console.log('received Mousemove', arg);
+  let curPos = robot.getMousePos();
+  robot.moveMouse(arg.x, arg.y);
+});

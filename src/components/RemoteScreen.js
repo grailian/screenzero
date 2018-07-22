@@ -6,7 +6,11 @@ import P2P from '../services/p2p';
 class RemoteScreen extends React.Component {
 
   mouseMoveHandler = (event) => {
-    // console.log(event)
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.pageX - rect.left;
+    const y = event.pageY - rect.top;
+    console.log(x, y, rect.width, rect.height);
+    P2P.sendMessage('mouseMove', { x, y, w: rect.width, h: rect.height });
   };
 
   mouseClickHandler = (event) => {

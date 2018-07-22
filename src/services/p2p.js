@@ -173,8 +173,10 @@ class P2P {
   }
 
   handleMouseMove(payload){
-    console.log('mouseMove', payload)
-
+    // console.log('mouseMove', payload)
+    const scaleX = window.screen.availWidth / payload.w
+    const scaleY = window.screen.availHeight / payload.h
+    ipcRenderer.send('mouseMove', {x: payload.x * scaleX, y: payload.y * scaleY})
   }
 
   handleMouseClick(payload){
@@ -191,16 +193,17 @@ class P2P {
 
 
   onSignal(signal) {
+    console.log('signal', signal)
     if (signal.type) {
-      console.log('🗼🗼🗼🗼🗼🗼 You should relay this signal:', signal.type);
+      // console.log('🗼🗼🗼🗼🗼🗼 You should relay this signal:', signal.type);
       if (this.localPeer && this.localPeer.connected) {
-        console.log('sending signal over data channel');
+        // console.log('sending signal over data channel');
         this.localPeer.send(JSON.stringify(signal));
       } else if (typeof this._onSignal === 'function') {
         this._onSignal(signal);
       }
     } else {
-      console.log('🗼🗼🗼🗼🗼🗼 DO NOT relay this signal:', signal);
+      // console.log('🗼🗼🗼🗼🗼🗼 DO NOT relay this signal:', signal);
     }
     return this;
   }
