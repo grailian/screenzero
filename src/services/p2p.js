@@ -22,6 +22,7 @@ class P2P {
   constructor() {
     this.localPeer = null;
     this.myStream = null;
+    this.isInitiator = false
   }
 
   async addTrack(sendScreen) {
@@ -106,6 +107,7 @@ class P2P {
 
   newPeer(initiator, stream) {
     console.log('initiator', initiator);
+    this.isInitiator = initiator || false
     this.localPeer = new Peer({
       initiator, stream, trickle: false
     });
@@ -124,6 +126,12 @@ class P2P {
     console.log('onConnect 🙋🙋🙋🙋🙋');
     if (typeof this._onConnect === 'function') {
       this._onConnect();
+    }
+
+    console.log('peerConnected', this.isInitiator)
+
+    if(this.isInitiator){
+      ipcRenderer.send('peerConnected')
     }
     return this;
   }
@@ -150,10 +158,8 @@ class P2P {
         const parsed = JSON.parse(string);
         if (parsed.type === 'chat') {
           console.log('got chat message', parsed.content);
-        } else if(parsed.type === 'mouseMove'){
-          this.handleMouseMove(parsed.payload)
-        } else if(parsed.type === 'mouseClick'){
-          this.handleMouseClick(parsed.payload)
+        } else if(parsed.type === 'mouseMove' || parsed.type === 'mouseClick'){
+          this.handleMouseEvent(parsed.type, parsed.payload)
         }
         if (parsed.type && parsed.sdp) {
           this.localPeer.signal(parsed);
@@ -172,25 +178,19 @@ class P2P {
     this._onData = callback;
   }
 
-  handleMouseMove(payload){
-    // console.log('mouseMove', payload)
+  handleMouseEvent(type, payload){
     const scaleX = window.screen.availWidth / payload.w
     const scaleY = window.screen.availHeight / payload.h
-    ipcRenderer.send('mouseMove', {x: payload.x * scaleX, y: payload.y * scaleY})
-  }
-
-  handleMouseClick(payload){
-    console.log('mouseClick', payload)
-    const scaleX = window.screen.availWidth / payload.w
-    const scaleY = window.screen.availHeight / payload.h
-    ipcRenderer.send('mouseClick', {x: payload.x * scaleX, y: payload.y * scaleY})
+    payload.x *= scaleX
+    payload.y *= scaleY
+    console.log('mouseEvent', type, payload)
+    ipcRenderer.send(type, payload)
   }
 
   sendMessage(type, payload){
     console.log('sendMessage', type, payload)
-    console.log('this.localPeer', this.localPeer);
     if (this.localPeer)
-    this.localPeer.send(JSON.stringify({type, payload}))
+      this.localPeer.send(JSON.stringify({type, payload}))
   }
 
 
@@ -239,6 +239,8 @@ class P2P {
   }
 
   onClose() {
+    console.log('peerDisconnected')
+    ipcRenderer.send('peerDisconnected')
     if (typeof this._onClose === 'function') {
       this._onClose();
     }

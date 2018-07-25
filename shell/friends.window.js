@@ -1,5 +1,6 @@
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const MouseWindow = require('./mouse.window').MouseWindow;
 const appRoot = path.join(__dirname, '..');
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -11,7 +12,9 @@ class FriendsWindow {
     }
     this.app = app;
     this.window = null;
-    return this.create();
+    this.mouseWindow = null
+    this.setEventListeners()
+    this.create();
   }
 
   create() {
@@ -49,8 +52,41 @@ class FriendsWindow {
         this.window = new FriendsWindow(this.app);
       }
     });
+  }
 
-    return this;
+  setEventListeners(){
+    ipcMain.on('peerConnected', (event, arg) => {
+      this.mouseWindow = new MouseWindow(this.app)
+    });
+
+    ipcMain.on('peerDisconnected', (event, arg) => {
+      if(this.mouseWindow){
+        this.mouseWindow.kill()
+        this.mouseWindow = null
+      }
+    });
+
+    ipcMain.on('mouseMove', (event, arg) => {
+      if(this.mouseWindow){
+        this.mouseWindow.onMouseMove(event, arg)
+      }
+    })
+
+    ipcMain.on('mouseClick', (event, arg) => {
+      if(this.mouseWindow){
+        if(arg.action === 'click'){
+          this.mouseWindow.onMouseClick(event, arg)
+        } else {
+          this.mouseWindow.onMouseUpDown(event, arg)
+        }
+      }
+    })
+
+    ipcMain.on('keyPress', (event, arg) => {
+      if(this.mouseWindow){
+        this.mouseWindow.onKeyPress(event, arg)
+      }
+    })
   }
 }
 

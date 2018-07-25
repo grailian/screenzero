@@ -1,5 +1,6 @@
 const { BrowserWindow } = require('electron');
 const path = require('path');
+const robot = require('robotjs');
 const appRoot = path.join(__dirname, '..');
 
 // ------------------------------------
@@ -8,6 +9,8 @@ const appRoot = path.join(__dirname, '..');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
+
+
 class MouseWindow {
   constructor(app) {
     if (!app) {
@@ -15,8 +18,9 @@ class MouseWindow {
     }
     this.app = app;
     this.window = null;
-    this.demoCount = 0;
-    return this.create();
+    this.lastPos = robot.getMousePos();
+    this.currentMouseAction = 'up'
+    this.create();
   }
 
   create() {
@@ -26,7 +30,6 @@ class MouseWindow {
       resizable: false,
       width: 25,
       height: 25,
-      // backgroundColor: 'transparent',
       transparent: true,
       alwaysOnTop: true,
       webPreferences: {
@@ -38,23 +41,56 @@ class MouseWindow {
 
     this.window.loadURL('file://' + appRoot + '/shell/mouse.html');
 
-    this.moveMouse(...this.window.getPosition());
-    return this;
+    this.setOnTop()
   }
 
-  moveMouse(x, y) {
-    this.window.setPosition(x, y);
+  setOnTop(){
+    if(this.window){
+      this.window.setAlwaysOnTop(true)
+      setTimeout(() => {
+        this.setOnTop()
+      }, 5000)
+    }
+  }
 
-    // TODO: kill this demo stuff
-    setTimeout(() => {
-      const [x, y] = this.window.getPosition();
-      this.demoCount += 1;
-      if (this.demoCount < 5) {
-        this.moveMouse(x + 10, y + 10);
-      } else {
-        this.kill();
-      }
-    }, 1000);
+  onMouseMove(event, arg){
+    // console.log('received mouse move', arg);
+    if(this.currentMouseAction === 'down'){
+      robot.dragMouse(arg.x, arg.y)
+    }
+    this.moveSimMouse(arg.x, arg.y)
+  }
+
+  onMouseClick(event, arg){
+    // console.log('received mouse click', arg);
+    this.currentMouseAction = 'up'
+    this.lastPos = robot.getMousePos();
+    robot.moveMouse(arg.x, arg.y);
+    robot.mouseClick(arg.button || 'left')
+    // robot.moveMouse(this.lastPos.x, this.lastPos.y);
+  }
+
+  onMouseUpDown(event, arg){
+    // console.log('received mouse click', arg);
+    this.currentMouseAction = arg.action
+    if(arg.action === 'down'){
+      this.lastPos = robot.getMousePos();
+    }
+
+    robot.mouseToggle(arg.action, arg.button || 'left');
+
+    /*if(arg.action === 'up'){
+      robot.moveMouse(this.lastPos.x, this.lastPos.y);
+    }*/
+  }
+
+  onKeyPress(event, arg){
+    console.log('keypress', arg)
+    robot.keyTap(arg.keyCode, arg.modifiers)
+  }
+
+  moveSimMouse(x, y) {
+    this.window.setPosition(Math.floor(x), Math.floor(y));
   }
 
   kill() {
